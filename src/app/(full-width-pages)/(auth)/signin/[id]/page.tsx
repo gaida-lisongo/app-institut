@@ -1,68 +1,47 @@
 'use client';
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useCallback } from "react";
+import { useAuthenticateAgent, useAuthLoading, useAuthError, useIsAuthenticated } from "@/store/useUserStore";
 
 const LoginId = () => {
     const params = useParams();
     const router = useRouter();
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    const authenticateAgent = useAuthenticateAgent();
+    const loading = useAuthLoading();
+    const error = useAuthError();
+    const isAuthenticated = useIsAuthenticated();
     
     const id = params.id as string;
 
+    const handleAuthentication = useCallback(async () => {
+        if (!id) {
+            return;
+        }
+
+        // Vérifier d'abord si déjà authentifié
+        if (isAuthenticated) {
+            router.push('/');
+            return;
+        }
+
+        try {
+            // Utiliser l'action du store pour authentifier
+            const result = await authenticateAgent(id);
+            
+            if (result.success) {
+                // Redirection vers le dashboard après authentification réussie et persistance
+                router.push('/');
+            }
+            // Les erreurs sont gérées automatiquement par le store
+        } catch (error) {
+            console.error('Erreur lors de l\'authentification:', error);
+        }
+    }, [id, router, authenticateAgent, isAuthenticated]);
+
     useEffect(() => {
-        // Authentification automatique avec l'ID
-        const authenticateAgent = async () => {
-            if (!id) {
-                setError('ID agent manquant');
-                setLoading(false);
-                return;
-            }
-
-            try {
-                setLoading(true);
-                
-                // Vérifier d'abord si déjà authentifié
-                // const checkResponse = await fetch('/api/auth/login', {
-                //     method: 'GET',
-                //     credentials: 'include'
-                // });
-                // const checkResult = await checkResponse.json();
-                
-                // if (checkResult.success) {
-                //     router.push('/');
-                //     return;
-                // }
-
-                // Sinon, authentifier avec l'ID
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ agentId: id }),
-                    credentials: 'include'
-                });
-
-                const result = await response.json();
-                
-                if (result.success) {
-                    // Redirection vers le dashboard après authentification réussie
-                    router.push('/');
-                } else {
-                    setError(result.error || 'Erreur d\'authentification');
-                    setLoading(false);
-                }
-            } catch (error) {
-                console.error('Erreur lors de l\'authentification:', error);
-                setError('Erreur de connexion au serveur');
-                setLoading(false);
-            }
-        };
-
-        authenticateAgent();
-    }, [id, router]);
+        handleAuthentication();
+    }, [handleAuthentication]);
 
     if (loading) {
         return (

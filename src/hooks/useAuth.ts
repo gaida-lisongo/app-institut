@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useUserStore, useIsAuthenticated, useAgent } from '@/store/useUserStore';
 
 interface User {
   userId: string;
@@ -22,6 +23,11 @@ export function useAuth() {
     error: null
   });
   const router = useRouter();
+  
+  // Store Zustand
+  const { setUser, clearUser } = useUserStore();
+  const isAuthenticatedStore = useIsAuthenticated();
+  const agent = useAgent();
 
   // Vérifier l'authentification au chargement
   useEffect(() => {
@@ -75,6 +81,10 @@ export function useAuth() {
       const result = await response.json();
 
       if (result.success) {
+        // Mettre à jour le store Zustand
+        setUser(result.data.agent, result.data.autorisations);
+        
+        // Mettre à jour l'état local pour compatibilité
         setAuthState({
           user: {
             userId: result.data.agent._id,
@@ -111,6 +121,9 @@ export function useAuth() {
         credentials: 'include'
       });
 
+      // Nettoyer le store Zustand
+      clearUser();
+      
       setAuthState({
         user: null,
         loading: false,

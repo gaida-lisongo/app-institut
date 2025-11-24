@@ -1,71 +1,53 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeftIcon } from '@/icons';
 import Link from 'next/link';
+import { useAuthenticateAgent, useCheckAuth, useAuthLoading, useAuthError, useIsAuthenticated } from '@/store/useUserStore';
 
 export default function LoginPage() {
   const [agentId, setAgentId] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const router = useRouter();
+  const authenticateAgent = useAuthenticateAgent();
+  const checkAuth = useCheckAuth();
+  const loading = useAuthLoading();
+  const error = useAuthError();
+  const isAuthenticated = useIsAuthenticated();
 
-  // Vérifier l'authentification sans utiliser le hook pour éviter les boucles
+  const handleCheckAuth = useCallback(async () => {
+    if (isAuthenticated) {
+      router.push('/');
+    } else {
+      await checkAuth();
+    }
+  }, [router, checkAuth, isAuthenticated]);
+
+  // Vérifier l'authentification au chargement
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const response = await fetch('/api/auth/login', {
-          method: 'GET',
-          credentials: 'include'
-        });
-        const result = await response.json();
-        if (result.success) {
-          router.push('/');
-        }
-      } catch (error) {
-        // Pas authentifié, rester sur la page
-      }
-    };
-    checkAuth();
-  }, [router]);
+    handleCheckAuth();
+  }, [handleCheckAuth]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!agentId.trim()) {
-      setError('Veuillez saisir votre ID agent');
       return;
     }
 
     try {
-      setLoading(true);
-      setError('');
-
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ agentId: agentId.trim() }),
-        credentials: 'include'
-      });
-
-      const result = await response.json();
-
+      // Utiliser l'action du store pour authentifier
+      const result = await authenticateAgent(agentId.trim());
+      
       if (result.success) {
-        // Rediriger vers le dashboard admin
+        // Redirection vers le dashboard après authentification réussie et persistance
         router.push('/');
-      } else {
-        setError(result.error || 'Erreur de connexion');
       }
+      // Les erreurs sont gérées automatiquement par le store
     } catch (error) {
       console.error('Erreur de connexion:', error);
-      setError('Erreur de connexion au serveur');
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [agentId, authenticateAgent, router]);
 
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full">

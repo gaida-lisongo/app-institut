@@ -1,9 +1,13 @@
 'use client';
 
 import { useAuth } from '@/hooks/useAuth';
+import { useAgent, useFullName, useAutorisations } from '@/store/useUserStore';
 
 export default function AuthStatus() {
   const { user, isAuthenticated, logout, loading } = useAuth();
+  const agent = useAgent();
+  const fullName = useFullName();
+  const autorisations = useAutorisations();
 
   if (loading) {
     return (
@@ -29,9 +33,14 @@ export default function AuthStatus() {
             Authentifié avec succès
           </h3>
           <div className="mt-2 text-sm text-green-700 dark:text-green-300">
-            <p><strong>ID Utilisateur:</strong> {user?.userId}</p>
-            {user?.email && <p><strong>Email:</strong> {user.email}</p>}
-            {user?.role && <p><strong>Rôle:</strong> {user.role}</p>}
+            {agent && (
+              <>
+                <p><strong>Nom:</strong> {fullName}</p>
+                <p><strong>Matricule:</strong> {agent.matricule}</p>
+                <p><strong>Grade:</strong> {agent.grade.description}</p>
+                <p><strong>Autorisations:</strong> {autorisations.length} active(s)</p>
+              </>
+            )}
           </div>
         </div>
         <button

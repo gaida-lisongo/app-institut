@@ -7,11 +7,11 @@ import StatisticsChart from "@/components/ecommerce/StatisticsChart";
 import RecentOrders from "@/components/ecommerce/RecentOrders";
 import DemographicCard from "@/components/ecommerce/DemographicCard";
 import AuthStatus from "@/components/auth/AuthStatus";
+import UserProfile from "@/components/user/UserProfile";
 
 export const metadata: Metadata = {
-  title:
-    "Next.js E-commerce Dashboard | TailAdmin - Next.js Dashboard Template",
-  description: "This is Next.js Home for TailAdmin Dashboard Template",
+  title: "Dashboard Admin | Système de Gestion",
+  description: "Dashboard principal du système de gestion administrative",
 };
 
 export default function Ecommerce() {
@@ -19,6 +19,9 @@ export default function Ecommerce() {
     <div className="grid grid-cols-12 gap-4 md:gap-6">
       <div className="col-span-12">
         <AuthStatus />
+      </div>
+      <div className="col-span-12">
+        <UserProfile />
       </div>
       <div className="col-span-12 space-y-6 xl:col-span-7">
         <EcommerceMetrics />
