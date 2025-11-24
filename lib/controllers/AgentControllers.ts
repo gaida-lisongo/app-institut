@@ -14,6 +14,17 @@ class AgentController {
             });
     }
 
+    //get all agents
+    async getAllAgents() {
+        try {
+            const agents = await Agent.find().populate('grade');
+            return agents;
+        } catch (error) {
+            console.error('Error fetching agents:', error);
+            throw error;
+        }
+    }
+
     //get agents by code of grade
     async getAgentsByGradeCode(code: string) {
         try {

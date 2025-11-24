@@ -6,12 +6,22 @@ import { IAgent, AgentData, CreateAgentData } from '@/models/Agent';
 export async function GET(request: NextRequest) {
     try {
         const code = request.nextUrl.searchParams.get('grade');
-        const agents = await AgentControllers.getAgentsByGradeCode(code as string);
-        
-        return NextResponse.json(
-            { success: true, data: agents },
-            { status: 200 }
-        );
+
+        if (!code) {
+            const agents = await AgentControllers.getAllAgents();
+            return NextResponse.json(
+                { success: true, data: agents },
+                { status: 200 }
+            );
+        } else {
+            const agents = await AgentControllers.getAgentsByGradeCode(code as string);
+            
+            return NextResponse.json(
+                { success: true, data: agents },
+                { status: 200 }
+            );
+
+        }
     } catch (error: any) {
         return NextResponse.json(
             { success: false, error: error.message },

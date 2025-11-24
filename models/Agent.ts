@@ -1,10 +1,11 @@
 import mongoose, { Schema, Document, Model, Types } from 'mongoose';
+import crypto from 'crypto';
 
 // 1. Définir l'Interface pour les propriétés du Document
 export interface IAgent extends Document {
   nom: string;
   post_nom: string;
-  prenom: string;
+  prenom?: string;
   grade: Types.ObjectId;
   matricule: string;
   secure: string;
@@ -17,7 +18,7 @@ export interface AgentData {
   _id?: string;
   nom: string;
   post_nom: string;
-  prenom: string;
+  prenom?: string;
   grade: string;
   matricule: string;
   secure: string;
@@ -29,7 +30,7 @@ export interface AgentData {
 export interface CreateAgentData {
   nom: string;
   post_nom: string;
-  prenom: string;
+  prenom?: string;
   grade: string;
   matricule: string;
   secure: string;
@@ -38,7 +39,9 @@ export interface CreateAgentData {
   telephone?: string
 }
 
-export interface AgentModel extends Model<IAgent> {}
+export interface AgentModel extends Model<IAgent> {
+  // Add any static methods here if needed
+}
 
 /* Définition du Schéma */
 const AgentSchema: Schema = new Schema({
@@ -54,7 +57,7 @@ const AgentSchema: Schema = new Schema({
   },
   prenom: {
     type: String,
-    required: [true, 'Veuillez ajouter un prenom.'],
+    required: false,
     maxlength: [60, 'Le prenom ne peut pas dépasser 60 caractères.'],
   },
   grade: {
@@ -79,16 +82,39 @@ const AgentSchema: Schema = new Schema({
   },
   email: {
     type: String,
-    required: [true, 'Veuillez ajouter un email.'],
+    required: false,
     maxlength: [60, 'Le email ne peut pas dépasser 60 caractères.'],
   },
   telephone: {
     type: String,
-    required: [true, 'Veuillez ajouter un telephone.'],
+    required: false,
     maxlength: [60, 'Le telephone ne peut pas dépasser 60 caractères.'],
   },
 }, {
     timestamps: true // Ajoute `createdAt` et `updatedAt` automatiquement
+});
+
+// Middleware pour nettoyer les chaînes vides avant validation
+AgentSchema.pre('validate', function (next: any) {
+    // Convertir les chaînes vides en undefined pour les champs optionnels
+    if (this.email === '') {
+        this.email = undefined;
+    }
+    if (this.telephone === '') {
+        this.telephone = undefined;
+    }
+    if (this.prenom === '') {
+        this.prenom = undefined;
+    }
+    next();
+});
+
+//Middle ware save pour crypté secure en SHA256
+AgentSchema.pre('save', function (next : any) {
+    if (this.isModified('secure')) {
+        this.secure = crypto.createHash('sha256').update(this.secure as string).digest('hex');
+    }
+    next();
 });
 
 // 3. Exporter le Modèle Typé

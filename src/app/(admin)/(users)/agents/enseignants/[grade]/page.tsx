@@ -1,8 +1,10 @@
 "use client";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import AgentCard from "@/components/agents/AgentCard";
+import CSVImportModal from "@/components/csv/CSVImportModal";
 import { AgentData, CreateAgentData } from "@/models/Agent";
 import { GradeData } from "@/models/Grade";
+import { csvValidators, csvTransformers } from "@/utils/csvParser";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 
@@ -14,6 +16,7 @@ export const AgentManager = ({ gradeCode }: { gradeCode: string }) => {
     const [showModal, setShowModal] = useState(false);
     const [editingAgent, setEditingAgent] = useState<AgentData | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [showCSVModal, setShowCSVModal] = useState(false);
     const [formData, setFormData] = useState({
         nom: '',
         post_nom: '',
@@ -221,9 +224,89 @@ export const AgentManager = ({ gradeCode }: { gradeCode: string }) => {
         setShowModal(true);
     };
 
+    // CSV Import functions
     const handleImportCSV = () => {
-        alert('Fonctionnalité d\'importation CSV à implémenter plus tard');
+        setShowCSVModal(true);
     };
+
+    const handleCSVImport = async (agentData: Record<string, any>) => {
+        try {
+            // Ensure the agent has the current grade
+            const currentGrade = await fetchCurrentGrade();
+            if (currentGrade) {
+                agentData.grade = currentGrade._id;
+            }
+
+            const result = await createAgent(agentData as CreateAgentData);
+            return { success: !!result?.success, error: result?.error };
+        } catch (error) {
+            return { success: false, error: String(error) };
+        }
+    };
+
+    const handleCSVImportComplete = (results: { successful: number; failed: number; errors: any[] }) => {
+        // Refresh the agents list to show newly imported agents
+        fetchAgents();
+        
+        // Show completion message
+        const message = `Importation terminée!\n${results.successful} agents importés avec succès.${
+            results.failed > 0 ? `\n${results.failed} agents ont échoué.` : ''
+        }`;
+        
+        alert(message);
+    };
+
+    // Define target fields for CSV import
+    const csvTargetFields = [
+        {
+            key: 'nom',
+            label: 'Nom',
+            required: true,
+            description: 'Nom de famille de l\'agent'
+        },
+        {
+            key: 'post_nom',
+            label: 'Post-nom',
+            required: true,
+            description: 'Post-nom de l\'agent'
+        },
+        {
+            key: 'prenom',
+            label: 'Prénom',
+            required: true,
+            description: 'Prénom de l\'agent'
+        },
+        {
+            key: 'matricule',
+            label: 'Matricule',
+            required: true,
+            description: 'Numéro de matricule unique'
+        },
+        {
+            key: 'secure',
+            label: 'Sécure',
+            required: true,
+            description: 'Numéro de sécure'
+        },
+        {
+            key: 'sexe',
+            label: 'Sexe',
+            required: true,
+            description: 'Sexe (M/F, Masculin/Féminin, Homme/Femme)'
+        },
+        {
+            key: 'email',
+            label: 'Email',
+            required: false,
+            description: 'Adresse email (optionnel)'
+        },
+        {
+            key: 'telephone',
+            label: 'Téléphone',
+            required: false,
+            description: 'Numéro de téléphone (optionnel)'
+        }
+    ];
 
     useEffect(() => {
         fetchAgents();
@@ -502,6 +585,16 @@ export const AgentManager = ({ gradeCode }: { gradeCode: string }) => {
                     </div>
                 </div>
             )}
+
+            {/* CSV Import Modal */}
+            <CSVImportModal
+                isOpen={showCSVModal}
+                onClose={() => setShowCSVModal(false)}
+                title={`Importer des agents - Grade: ${gradeCode}`}
+                targetFields={csvTargetFields}
+                onImport={handleCSVImport}
+                onComplete={handleCSVImportComplete}
+            />
         </div>
     );
 };
