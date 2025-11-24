@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import FiliereCard from '@/components/filieres/FiliereCard';
 
 interface Mention {
   _id: string;
@@ -87,6 +88,20 @@ export default function MentionDetailPage() {
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  // Handle filiere update
+  const handleUpdateFiliere = (updatedFiliere: Filiere) => {
+    if (mention) {
+      const updatedFilieres = mention.filieres?.map(f => 
+        f._id === updatedFiliere._id ? updatedFiliere : f
+      ) || [];
+      
+      setMention(prev => prev ? {
+        ...prev,
+        filieres: updatedFilieres
+      } : null);
+    }
   };
 
   // Create new filiere and associate with mention
@@ -241,53 +256,11 @@ export default function MentionDetailPage() {
         {mention.filieres && mention.filieres.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {mention.filieres.map((filiere) => (
-              <div
+              <FiliereCard
                 key={filiere._id}
-                className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {filiere.designation}
-                    </h3>
-                    <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
-                      <CalendarIcon className="h-4 w-4 mr-1" />
-                      {formatDate(filiere.createdAt)}
-                    </div>
-                  </div>
-                </div>
-
-                {filiere.description && (
-                  <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">
-                    {filiere.description}
-                  </p>
-                )}
-
-                <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <div className="flex items-center space-x-4 text-sm">
-                    <div className="text-center">
-                      <div className="font-semibold text-blue-600 dark:text-blue-400">
-                        {filiere.promotions?.length || 0}
-                      </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        Promotion{(filiere.promotions?.length || 0) > 1 ? 's' : ''}
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="font-semibold text-green-600 dark:text-green-400">
-                        {filiere.bureau?.length || 0}
-                      </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        Bureau
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <button className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
-                    Voir détails →
-                  </button>
-                </div>
-              </div>
+                filiere={filiere}
+                onUpdate={handleUpdateFiliere}
+              />
             ))}
           </div>
         ) : (

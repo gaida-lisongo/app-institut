@@ -74,12 +74,18 @@ export default function MentionCard({ mention, onView, onUpdate, onDelete }: Men
     }
 
     try {
+      // Préserver les filières existantes lors de la mise à jour
+      const updatePayload = {
+        ...editData,
+        filieres: mention.filieres?.map(f => f._id) || []
+      };
+
       const response = await fetch(`/api/mentions/${mention._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(editData),
+        body: JSON.stringify(updatePayload),
       });
 
       const result = await response.json();

@@ -58,8 +58,7 @@ const SectionSchema = new Schema<ISection>({
     },
     role: {
       type: String,
-      required: true,
-      enum: ['Chef de Section', 'Secrétaire', 'Membre']
+      required: true
     }
   }],
   filieres: [{
