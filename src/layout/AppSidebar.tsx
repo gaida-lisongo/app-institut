@@ -310,7 +310,40 @@ const AppSidebar: React.FC = () => {
     });
   };
 
-  
+  const usersMenuItems : NavItem[] = [
+    {
+      name: "Etudiants",
+      icon: <UserCircleIcon />,
+      subItems: [
+        {
+          name: "Inscriptions",
+          path: "/students/inscriptions",
+        },
+        {
+          name: "Recharges",
+          path: "/students/recharges",
+        },
+      ],
+    },
+    {
+      name: "Agents",
+      icon: <UserCircleIcon />,
+      subItems: [
+        {
+          name: "Enseignants",
+          path: "/agents/enseignants",
+        },
+        {
+          name: "Administratif",
+          path: "/agents/administratif",
+        },
+        {
+          name: "Autorisation",
+          path: "/agents/autorisation",
+        },
+      ],
+    },
+  ];
 
   return (
     <aside
@@ -365,6 +398,7 @@ const AppSidebar: React.FC = () => {
           <div className="flex flex-col gap-4">
             {renderMenu("main", navItems, "Menu")}
             {renderMenu("others", othersItems, "Others")}
+            {renderMenu("users", usersMenuItems, "Utilisateurs")}
           </div>
         </nav>
         {/* {isExpanded || isHovered || isMobileOpen ? <SidebarWidget /> : null} */}
