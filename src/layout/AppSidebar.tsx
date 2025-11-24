@@ -335,11 +335,11 @@ const AppSidebar: React.FC = () => {
         },
         {
           name: "Administratif",
-          path: "/agents/administratif",
+          path: "/agents/administratifs",
         },
         {
           name: "Autorisation",
-          path: "/agents/autorisation",
+          path: "/agents/autorisations",
         },
       ],
     },
