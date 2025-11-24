@@ -32,7 +32,7 @@ export default function AutorisationFormModal({
       if (isEditing && autorisation) {
         setFormData({
           designation: autorisation.designation,
-          agents: autorisation.agents as string[] || []
+          agents: autorisation.agents || []
         });
       } else {
         setFormData({

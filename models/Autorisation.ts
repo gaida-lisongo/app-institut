@@ -17,7 +17,7 @@ export interface AutorisationData {
 
 export interface CreateAutorisationData {
   designation: string;
-  agents?: Types.ObjectId[];
+  agents?: string[];
 }
 
 export interface AutorisationModel extends Model<IAutorisation> {
