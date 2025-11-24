@@ -91,7 +91,7 @@ export const AgentManager = ({ gradeCode }: { gradeCode: string }) => {
         const filtered = agents.filter(agent =>
             agent.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
             agent.post_nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            agent.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            agent.prenom?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             agent.matricule.toLowerCase().includes(searchTerm.toLowerCase()) ||
             agent.secure.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (agent.email && agent.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -213,7 +213,7 @@ export const AgentManager = ({ gradeCode }: { gradeCode: string }) => {
         setFormData({
             nom: agent.nom,
             post_nom: agent.post_nom,
-            prenom: agent.prenom,
+            prenom: agent.prenom ?? '',
             grade: gradeId,
             matricule: agent.matricule,
             secure: agent.secure,
