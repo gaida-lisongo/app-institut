@@ -24,6 +24,17 @@ class GradeController {
         }
     }
 
+    //get grade by code
+    async getGradeByCode(code: string) {
+        try {
+            const grade = await Grade.findOne({ code });
+            return grade;
+        } catch (error) {
+            console.error('Error fetching grade by code:', error);
+            throw error;
+        }
+    }
+
     //create grade
     async createGrade(grade: CreateGradeData) {
         try {

@@ -6,12 +6,22 @@ import { IGrade, GradeData, CreateGradeData } from '@/models/Grade';
 export async function GET(request: NextRequest) {
   try {
     const type = request.nextUrl.searchParams.get('type');
-    const grades = await GradeControllers.getGradesByType(type as string);
+    const code = request.nextUrl.searchParams.get('code');
+
+    if(type){
+      const grades = await GradeControllers.getGradesByType(type as string);
+      return NextResponse.json(
+        { success: true, data: grades },
+        { status: 200 }
+      );
+    } else if(code){
+      const grade = await GradeControllers.getGradeByCode(code as string);
+      return NextResponse.json(
+        { success: true, data: grade },
+        { status: 200 }
+      );
+    }
     
-    return NextResponse.json(
-      { success: true, data: grades },
-      { status: 200 }
-    );
   } catch (error: any) {
     return NextResponse.json(
       { success: false, error: error.message },
@@ -19,6 +29,7 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
 
 // POST /api/grades - Créer un nouveau grade
 export async function POST(request: NextRequest) {

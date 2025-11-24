@@ -122,7 +122,7 @@ export const GradeManager = ({ type }: {type: string}) => {
     }
 
     const handleNavigate = (gradeCode: string) => {
-        router.push(`/enseignants/${gradeCode}`);
+        router.push(`/${type == 'enseignant' ? 'agents/enseignants' : 'agents/administratifs'}/${gradeCode}`);
     }
 
     useEffect(() => {
