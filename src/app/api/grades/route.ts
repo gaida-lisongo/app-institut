@@ -1,6 +1,6 @@
 import GradeControllers from '@/lib/controllers/GradeControllers';
 import { NextRequest, NextResponse } from 'next/server';
-import { IGrade } from '@/models/Grade';
+import { IGrade, GradeData, CreateGradeData } from '@/models/Grade';
 
 // GET /api/gades?type=<type> - Récupérer les grades d'un type spécifique
 export async function GET(request: NextRequest) {
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const grade = await GradeControllers.createGrade(body as Omit<IGrade, '_id'>);
+    const grade = await GradeControllers.createGrade(body as CreateGradeData);
     
     return NextResponse.json(
       { success: true, data: grade },
@@ -42,13 +42,16 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const grade = await GradeControllers.updateGrade(body.id, body as IGrade);
+    console.log("body to update :", body);
+    const { _id: id, ...updateData } = body;
+    const grade = await GradeControllers.updateGrade(id, updateData as Partial<CreateGradeData>);
     
     return NextResponse.json(
       { success: true, data: grade },
       { status: 200 }
     );
   } catch (error: any) {
+    console.error('Erreur lors de la modification du grade:', error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 400 }

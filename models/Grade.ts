@@ -6,7 +6,23 @@ export interface IGrade extends Document {
   description: string;
   type: string;
   createdAt: Date;
-  
+}
+
+// 2. Type transitoire pour l'API (sans les propriétés MongoDB)
+export interface GradeData {
+  _id?: string;
+  code: string;
+  description: string;
+  type: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+// 3. Type pour la création (sans _id)
+export interface CreateGradeData {
+  code: string;
+  description: string;
+  type: string;
 }
 
 // 2. Définir l'Interface pour le Modèle Mongoose

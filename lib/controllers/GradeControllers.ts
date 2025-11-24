@@ -1,5 +1,5 @@
 import dbConnect from '@/lib/dbConnect';
-import Grade, { IGrade } from '@/models/Grade';
+import Grade, { IGrade, GradeData, CreateGradeData } from '@/models/Grade';
 
 class GradeController {
     //constructor
@@ -25,7 +25,7 @@ class GradeController {
     }
 
     //create grade
-    async createGrade(grade: Omit<IGrade, '_id'>) {
+    async createGrade(grade: CreateGradeData) {
         try {
             const newGrade = await Grade.create(grade);
             return newGrade;
@@ -36,7 +36,7 @@ class GradeController {
     }
 
     //update grade
-    async updateGrade(id: string, grade: IGrade) {
+    async updateGrade(id: string, grade: Partial<CreateGradeData>) {
         try {
             const updatedGrade = await Grade.findByIdAndUpdate(id, grade, { new: true });
             return updatedGrade;

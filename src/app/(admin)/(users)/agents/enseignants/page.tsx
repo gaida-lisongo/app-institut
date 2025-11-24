@@ -1,14 +1,14 @@
 "use client";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
-import { IGrade } from "@/models/Grade";
+import { GradeData, CreateGradeData } from "@/models/Grade";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export const GradeManager = ({ type }: {type: string}) => {
-    const [grades, setGrades] = useState<IGrade[]>([]);
+    const [grades, setGrades] = useState<GradeData[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
-    const [editingGrade, setEditingGrade] = useState<IGrade | null>(null);
+    const [editingGrade, setEditingGrade] = useState<GradeData | null>(null);
     const [formData, setFormData] = useState({
         code: '',
         description: '',
@@ -30,7 +30,7 @@ export const GradeManager = ({ type }: {type: string}) => {
         }
     }
 
-    const createGrade = async (grade: Omit<IGrade, '_id'>) => {
+    const createGrade = async (grade: CreateGradeData) => {
         try {
             const response = await fetch(`/api/grades`, {
                 method: 'POST',
@@ -51,7 +51,7 @@ export const GradeManager = ({ type }: {type: string}) => {
         }
     }
 
-    const updateGrade = async (grade: IGrade) => {
+    const updateGrade = async (grade: GradeData) => {
         try {
             const response = await fetch(`/api/grades`, {
                 method: 'PUT',
@@ -62,7 +62,7 @@ export const GradeManager = ({ type }: {type: string}) => {
             });
             const data = await response.json();
             if (data.success) {
-                setGrades(grades.map(g => g._id === grade._id ? data.data : g));
+                setGrades(grades.map(g => g._id && grade._id && g._id === grade._id ? data.data : g));
                 setEditingGrade(null);
                 setShowModal(false);
                 resetForm();
@@ -85,7 +85,7 @@ export const GradeManager = ({ type }: {type: string}) => {
                 });
                 const data = await response.json();
                 if (data.success) {
-                    setGrades(grades.filter(g => g._id !== id));
+                    setGrades(grades.filter(g => g._id && g._id !== id));
                 }
                 return data;
             } catch (error) {
@@ -111,7 +111,7 @@ export const GradeManager = ({ type }: {type: string}) => {
         }
     }
 
-    const handleEdit = (grade: IGrade) => {
+    const handleEdit = (grade: GradeData) => {
         setEditingGrade(grade);
         setFormData({
             code: grade.code,
@@ -155,8 +155,12 @@ export const GradeManager = ({ type }: {type: string}) => {
 
             {/* Grille des cartes */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {grades.map((grade) => (
-                    <div key={grade._id} className="bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+                {grades.map((grade, index) => (
+                    <div 
+                        key={grade._id || index} 
+                        className="bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-xl hover:scale-105 transition-all duration-300 ease-in-out transform animate-fade-in"
+                        style={{ animationDelay: `${index * 100}ms` }}
+                    >
                         <div className="flex justify-between items-start mb-4">
                             <div>
                                 <h3 className="text-lg font-semibold text-gray-900">{grade.code}</h3>
@@ -185,8 +189,9 @@ export const GradeManager = ({ type }: {type: string}) => {
                                     Modifier
                                 </button>
                                 <button
-                                    onClick={() => deleteGrade(grade._id)}
-                                    className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 px-3 rounded-md text-sm transition-colors"
+                                    onClick={() => grade._id && deleteGrade(grade._id)}
+                                    disabled={!grade._id}
+                                    className="flex-1 bg-red-500 hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-2 px-3 rounded-md text-sm transition-colors"
                                 >
                                     Supprimer
                                 </button>
@@ -206,8 +211,8 @@ export const GradeManager = ({ type }: {type: string}) => {
 
             {/* Modal pour créer/modifier un grade */}
             {showModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
+                    <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 transform animate-scale-in">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-lg font-semibold">
                                 {editingGrade ? 'Modifier le grade' : 'Nouveau grade'}
