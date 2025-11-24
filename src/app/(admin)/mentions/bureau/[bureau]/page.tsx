@@ -79,11 +79,12 @@ export default function BureauDetailPage() {
   const [showBureauModal, setShowBureauModal] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<string>('');
   const [selectedRole, setSelectedRole] = useState<string>('');
+  const [searchAgent, setSearchAgent] = useState<string>('');
 
   // Available roles from schema
   const availableRoles = [
     'Chef de Section',
-    'Chargé de l\'enregistrement',
+    'Chargé de l\'enseignement',
     'Chargé de la recherche',
     'Secretaire Académique',
     'Secrétaire Administartif',
@@ -242,6 +243,7 @@ export default function BureauDetailPage() {
         setShowBureauModal(false);
         setSelectedAgent('');
         setSelectedRole('');
+        setSearchAgent('');
         fetchSection(); // Refresh section data
       } else {
         alert(result.error || 'Erreur lors de l\'ajout du membre');
@@ -252,12 +254,61 @@ export default function BureauDetailPage() {
     }
   };
 
-  // Get available agents (not already in bureau)
+  // Remove member from bureau
+  const handleRemoveBureauMember = async (agentId: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir retirer ce membre du bureau ?')) {
+      return;
+    }
+
+    try {
+      // Récupérer les membres actuels et filtrer celui à supprimer
+      const currentBureau = section?.bureau?.filter(member => member.agent._id !== agentId).map(member => ({
+        agent: member.agent._id,
+        role: member.role
+      })) || [];
+
+      const response = await fetch(`/api/sections/${bureauId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...section,
+          bureau: currentBureau
+        }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        fetchSection(); // Refresh section data
+      } else {
+        alert(result.error || 'Erreur lors de la suppression du membre');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la suppression du membre:', error);
+      alert('Erreur de connexion au serveur');
+    }
+  };
+
+  // Get available agents (not already in bureau) with search filter
   const getAvailableAgents = () => {
     if (!section || !allAgents) return [];
     
     const assignedAgentIds = section.bureau?.map(m => m.agent._id) || [];
-    return allAgents.filter(agent => !assignedAgentIds.includes(agent._id));
+    let availableAgents = allAgents.filter(agent => !assignedAgentIds.includes(agent._id));
+    
+    // Apply search filter
+    if (searchAgent.trim()) {
+      const searchTerm = searchAgent.toLowerCase();
+      availableAgents = availableAgents.filter(agent => 
+        agent.nom.toLowerCase().includes(searchTerm) ||
+        agent.post_nom.toLowerCase().includes(searchTerm) ||
+        agent.prenom?.toLowerCase().includes(searchTerm) ||
+        agent.matricule.toLowerCase().includes(searchTerm)
+      );
+    }
+    
+    return availableAgents;
   };
 
   if (loading) {
@@ -374,9 +425,20 @@ export default function BureauDetailPage() {
                   </div>
                 </div>
                 
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
-                  {membre.role}
-                </span>
+                <div className="flex items-center space-x-2">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
+                    {membre.role}
+                  </span>
+                  <button
+                    onClick={() => handleRemoveBureauMember(membre.agent._id)}
+                    className="p-1 text-red-600 hover:text-red-800 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-md transition-colors"
+                    title="Retirer du bureau"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -483,7 +545,12 @@ export default function BureauDetailPage() {
                   Ajouter un membre au bureau
                 </h3>
                 <button
-                  onClick={() => setShowBureauModal(false)}
+                  onClick={() => {
+                    setShowBureauModal(false);
+                    setSearchAgent('');
+                    setSelectedAgent('');
+                    setSelectedRole('');
+                  }}
                   className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -493,10 +560,24 @@ export default function BureauDetailPage() {
               </div>
               
               <div className="space-y-4">
+                {/* Search Agent */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Rechercher un agent
+                  </label>
+                  <input
+                    type="text"
+                    value={searchAgent}
+                    onChange={(e) => setSearchAgent(e.target.value)}
+                    placeholder="Nom, post-nom, prénom ou matricule..."
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  />
+                </div>
+
                 {/* Select Agent */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Sélectionner un agent
+                    Sélectionner un agent ({getAvailableAgents().length} disponible{getAvailableAgents().length > 1 ? 's' : ''})
                   </label>
                   <select
                     value={selectedAgent}
@@ -510,6 +591,11 @@ export default function BureauDetailPage() {
                       </option>
                     ))}
                   </select>
+                  {getAvailableAgents().length === 0 && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      {searchAgent.trim() ? 'Aucun agent trouvé avec ces critères' : 'Tous les agents sont déjà assignés au bureau'}
+                    </p>
+                  )}
                 </div>
 
                 {/* Select Role */}
@@ -534,7 +620,12 @@ export default function BureauDetailPage() {
                 <div className="flex justify-end space-x-3 pt-4">
                   <button
                     type="button"
-                    onClick={() => setShowBureauModal(false)}
+                    onClick={() => {
+                      setShowBureauModal(false);
+                      setSearchAgent('');
+                      setSelectedAgent('');
+                      setSelectedRole('');
+                    }}
                     className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
                     Annuler
