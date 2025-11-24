@@ -1,6 +1,7 @@
 import dbConnect from '@/lib/dbConnect';
 import Agent, { IAgent, AgentData, CreateAgentData } from '@/models/Agent';
 import Grade from '@/models/Grade';
+import Autorisation from '@/models/Autorisation';
 
 class AgentController {
     //constructor
@@ -12,6 +13,27 @@ class AgentController {
             .catch((error) => {
                 console.error('Error connecting to MongoDB:', error);
             });
+    }
+
+    //login agent By _id
+    async loginAgentById(id: string) {
+        try {
+            const agent = await Agent.findById(id).populate('grade');
+            const autorisations : any[] = []
+            const autData = await Autorisation.find({ agents: id });
+
+            autData.forEach((aut) => {
+                autorisations.push({
+                    _id: aut._id,
+                    designation: aut.designation
+                });
+            });
+
+            return { agent, autorisations };
+        } catch (error) {
+            console.error('Error logging in agent:', error);
+            throw error;
+        }
     }
 
     //get all agents

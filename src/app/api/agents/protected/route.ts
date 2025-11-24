@@ -1,8 +1,9 @@
 import AgentControllers from '@/lib/controllers/AgentControllers';
 import { NextRequest, NextResponse } from 'next/server';
 import { IAgent, AgentData, CreateAgentData } from '@/models/Agent';
+import { withAuth, AuthenticatedRequest } from '@/lib/auth/withAuth';
 
-// GET /api/agents?grade=<code> - Récupérer les agents d'un type spécifique
+// GET /api/agents/protected - Récupérer les agents (pas d'auth requise pour GET)
 export async function GET(request: NextRequest) {
     try {
         const code = request.nextUrl.searchParams.get('grade');
@@ -20,7 +21,6 @@ export async function GET(request: NextRequest) {
                 { success: true, data: agents },
                 { status: 200 }
             );
-
         }
     } catch (error: any) {
         return NextResponse.json(
@@ -30,10 +30,14 @@ export async function GET(request: NextRequest) {
     }
 }
 
-// POST /api/agents - Créer un nouveau agent
-export async function POST(request: NextRequest) {
+// POST /api/agents/protected - Créer un nouveau agent (AUTH REQUISE)
+export const POST = withAuth(async (request: AuthenticatedRequest) => {
     try {
         const body = await request.json();
+        
+        // Vous pouvez accéder aux informations de l'utilisateur authentifié
+        console.log('Agent créé par:', request.user.userId);
+        
         const agent = await AgentControllers.createAgent(body as CreateAgentData);
         
         return NextResponse.json(
@@ -46,13 +50,14 @@ export async function POST(request: NextRequest) {
             { status: 400 }
         );
     }
-}
+});
 
-// UPDATE /api/agents - Modifier un agent dont les infos sont portés dans le body
-export async function PUT(request: NextRequest) {
+// PUT /api/agents/protected - Modifier un agent (AUTH REQUISE)
+export const PUT = withAuth(async (request: AuthenticatedRequest) => {
     try {
         const body = await request.json();
-        console.log("body to update :", body);
+        console.log("Agent modifié par:", request.user.userId);
+        
         const { _id: id, ...updateData } = body;
         const agent = await AgentControllers.updateAgent(id, updateData as Partial<CreateAgentData>);
         
@@ -67,12 +72,14 @@ export async function PUT(request: NextRequest) {
             { status: 400 }
         );
     }
-}
+});
 
-// DELETE /api/agents - Supprimer un agent dont l'id est porté dans le body
-export async function DELETE(request: NextRequest) {
+// DELETE /api/agents/protected - Supprimer un agent (AUTH REQUISE)
+export const DELETE = withAuth(async (request: AuthenticatedRequest) => {
     try {
         const body = await request.json();
+        console.log("Agent supprimé par:", request.user.userId);
+        
         const agent = await AgentControllers.deleteAgent(body.id);
         
         return NextResponse.json(
@@ -85,22 +92,4 @@ export async function DELETE(request: NextRequest) {
             { status: 400 }
         );
     }
-}
-
-//FETCH /api/agents/- Récupérer un agent spécifique, body : {id}
-export async function FETCH(request: NextRequest) {
-    try {
-        const body = await request.json();
-        const agent = await AgentControllers.loginAgentById(body.id);
-        
-        return NextResponse.json(
-            { success: true, data: agent },
-            { status: 200 }
-        );
-    } catch (error: any) {
-        return NextResponse.json(
-            { success: false, error: error.message },
-            { status: 400 }
-        );
-    }
-}
+});
