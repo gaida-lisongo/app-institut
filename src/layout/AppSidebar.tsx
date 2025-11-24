@@ -18,6 +18,7 @@ import {
   UserCircleIcon,
 } from "../icons/index";
 import SidebarWidget from "./SidebarWidget";
+import { useAutorisations } from "@/store/useUserStore";
 
 type NavItem = {
   name: string;
@@ -25,6 +26,12 @@ type NavItem = {
   path?: string;
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
+
+type MenuType = {
+  menuType: string;
+  menuItems: NavItem[];
+  menuLabel: string
+}
 
 const navItems: NavItem[] = [
   {
@@ -97,6 +104,8 @@ const othersItems: NavItem[] = [
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
+  const autorisations = useAutorisations();
+  const [menu, setMenu] = useState<MenuType[]>([]);
 
   const renderMenuItems = (
     navItems: NavItem[],
@@ -297,6 +306,175 @@ const AppSidebar: React.FC = () => {
     }
   }, [openSubmenu]);
 
+  useEffect(() => {
+    const data : MenuType[] = [];
+
+    autorisations.forEach(auth => {
+      switch (auth?.designation) {
+        case 'ADMINISTRATEUR':
+          data.push({
+            menuType: 'admin',
+            menuLabel: 'ADMINISTRATEUR',
+            menuItems: [
+              {
+                name: 'Mentions',
+                icon: <TableIcon />,
+                subItems: [
+                  {
+                    name: "Bureau",
+                    path: "/mentions/bureau",
+                  },
+                  {
+                    name: "Filière",
+                    path: "/mentions/filiere",
+                  }
+                ]
+              },
+              {
+                name: "Etudiants",
+                icon: <UserCircleIcon />,
+                subItems: [
+                  {
+                    name: "Inscriptions",
+                    path: "/students/inscriptions",
+                  },
+                  {
+                    name: "Recharges",
+                    path: "/students/recharges",
+                  },
+                ],
+              },
+              {
+                name: "Agents",
+                icon: <UserCircleIcon />,
+                subItems: [
+                  {
+                    name: "Enseignants",
+                    path: "/agents/enseignants",
+                  },
+                  {
+                    name: "Administratif",
+                    path: "/agents/administratifs",
+                  },
+                  {
+                    name: "Autorisation",
+                    path: "/agents/autorisations",
+                  },
+                ],
+              },
+            ]
+          })
+          break;
+        case 'ACADEMIQUE':
+          data.push({
+            menuType: 'acad',
+            menuLabel: 'ACADEMIQUE',
+            menuItems: [
+              {
+                name: 'Cours',
+                icon: <ListIcon />,
+                subItems: [
+                  {
+                    name: "Unites",
+                    path: "/cours/unites",
+                  },
+                  {
+                    name: "Charges Horaires",
+                    path: "/cours/titulaire",
+                  }
+                ]
+              },
+              {
+                name: "Classes",
+                icon: <PageIcon />,
+                path: "/promotions"
+              }
+            ]
+          })
+          break;
+        case 'APPARITEUR':
+          data.push({
+            menuType: 'app',
+            menuLabel: 'APPARITEUR',
+            menuItems: [
+              {
+                name: 'Inscriptions',
+                icon: <ListIcon />,
+                subItems: [
+                  {
+                    name: "PREPARATOIRE",
+                    path: "/inscriptions/prepo",
+                  },
+                  {
+                    name: "LICENCE",
+                    path: "/inscriptions/licence",
+                  },
+                  {
+                    name: "MASTER",
+                    path: "/inscriptions/master",
+                  }
+                ]
+              },
+              {
+                name: "Documents",
+                icon: <PageIcon />,
+                subItems: [
+                  {
+                    name: "RELEVES",
+                    path: "/documents/releves",
+                  },
+                  {
+                    name: "FREQUENTATION",
+                    path: "/documents/frequentation",
+                  },
+                  {
+                    name: "STAGE",
+                    path: "/documents/stage"
+                  },
+                  {
+                    name: "SUJET",
+                    path: "/documents/sujet"
+                  },
+                ]
+              }
+            ]
+          })
+          break;
+        case 'JURY':
+          data.push({
+            menuType: 'jury',
+            menuLabel: 'JURY',
+            menuItems: [
+              {
+                name: 'Délibération',
+                icon: <ListIcon />,
+                subItems: [
+                  {
+                    name: "Grille",
+                    path: "/deliberations/grille",
+                  },
+                  {
+                    name: "Palmarèsse",
+                    path: "/deliberations/palmaresse",
+                  },
+                  {
+                    name: "Bulletin",
+                    path: "/deliberations/bulletin",
+                  }
+                ]
+              }
+            ]
+          })
+          break;
+        
+        default:
+          break;
+      }
+    })
+
+    setMenu(data);
+  }, [autorisations]);
+
   const handleSubmenuToggle = (index: number, menuType: string) => {
     setOpenSubmenu((prevOpenSubmenu) => {
       if (
@@ -396,7 +574,17 @@ const AppSidebar: React.FC = () => {
       <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
         <nav className="mb-6">
           <div className="flex flex-col gap-4">
-            {renderMenu("main", navItems, "Menu")}
+            {renderMenu("main", [              
+              {
+                icon: <GridIcon />,
+                name: "Dashboard",
+                path: "/",
+              }
+            ], "")}
+            {menu ? 
+                menu.map(item => renderMenu(item?.menuType, item?.menuItems, item?.menuLabel))
+                : null
+            }
             {renderMenu("others", othersItems, "Others")}
             {renderMenu("users", usersMenuItems, "Utilisateurs")}
           </div>
