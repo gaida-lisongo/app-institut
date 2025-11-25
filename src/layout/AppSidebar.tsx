@@ -333,16 +333,7 @@ const AppSidebar: React.FC = () => {
               {
                 name: "Etudiants",
                 icon: <UserCircleIcon />,
-                subItems: [
-                  {
-                    name: "Inscriptions",
-                    path: "/students/inscriptions",
-                  },
-                  {
-                    name: "Recharges",
-                    path: "/students/recharges",
-                  },
-                ],
+                path: "/students",
               },
               {
                 name: "Agents",
