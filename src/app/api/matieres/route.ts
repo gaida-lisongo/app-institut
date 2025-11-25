@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
 import { Matiere } from '@/models/Semestre';
+import { Types } from 'mongoose';
 
 // GET - Récupérer toutes les matières avec pagination
 export async function GET(request: NextRequest) {
@@ -8,9 +9,36 @@ export async function GET(request: NextRequest) {
     await dbConnect();
     
     const { searchParams } = new URL(request.url);
+    const uniteId = searchParams.get('uniteId');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search') || '';
+    
+    // Si uniteId est fourni, récupérer les matières de cette unité
+    if (uniteId) {
+      if (!Types.ObjectId.isValid(uniteId)) {
+        return NextResponse.json(
+          { success: false, error: 'ID d\'unité invalide' },
+          { status: 400 }
+        );
+      }
+      
+      // Récupérer l'unité avec ses matières
+      const { Unite } = await import('@/models/Semestre');
+      const unite = await Unite.findById(uniteId).populate('matieres');
+      
+      if (!unite) {
+        return NextResponse.json(
+          { success: false, error: 'Unité non trouvée' },
+          { status: 404 }
+        );
+      }
+      
+      return NextResponse.json({
+        success: true,
+        data: unite.matieres || []
+      });
+    }
     
     const skip = (page - 1) * limit;
     
@@ -58,12 +86,20 @@ export async function POST(request: NextRequest) {
     await dbConnect();
     
     const body = await request.json();
-    const { designation, code, descriptions, credits } = body;
+    const { designation, code, descriptions, credits, uniteId } = body;
     
     // Validation des champs requis
-    if (!designation || !code || !credits) {
+    if (!designation || !code || !credits || !uniteId) {
       return NextResponse.json(
         { success: false, error: 'Tous les champs requis doivent être remplis' },
+        { status: 400 }
+      );
+    }
+    
+    // Validation de l'ObjectId
+    if (!Types.ObjectId.isValid(uniteId)) {
+      return NextResponse.json(
+        { success: false, error: 'ID d\'unité invalide' },
         { status: 400 }
       );
     }
@@ -78,14 +114,14 @@ export async function POST(request: NextRequest) {
     }
     
     // Créer la nouvelle matière
-    const newMatiere = new Matiere({
+    const newMatiere = await Matiere.createMatiereWithUniteId({
       designation: designation.trim(),
       code: code.toUpperCase().trim(),
       descriptions: descriptions?.trim(),
-      credits: parseInt(credits)
+      credits: parseInt(credits),
+      uniteId: uniteId
     });
     
-    await newMatiere.save();
     
     return NextResponse.json({
       success: true,

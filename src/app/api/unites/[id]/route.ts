@@ -66,7 +66,7 @@ export async function PUT(
     }
     
     const body = await request.json();
-    const { designation, code, descriptions, matieres } = body;
+    const { designation, code, descriptions, matieres, credits } = body;
     
     // Validation des champs requis
     if (!designation || !code) {
@@ -95,7 +95,8 @@ export async function PUT(
         designation: designation.trim(),
         code: code.toUpperCase().trim(),
         descriptions: descriptions?.trim(),
-        matieres: matieres || []
+        matieres: matieres || [],
+        credits: credits || 0
       },
       { new: true, runValidators: true }
     ).populate('matieres', 'designation code credits');

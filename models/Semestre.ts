@@ -17,6 +17,7 @@ export interface IUnite extends Document {
     code: string;
     descriptions?: string;
     credits: number;
+    filiereId: Types.ObjectId;
     matieres: Types.ObjectId[];
     createdAt: Date;
     updatedAt: Date;
@@ -34,6 +35,11 @@ export interface ISemestre extends Document {
 // Interface pour les méthodes statiques du modèle Semestre
 export interface ISemestreModel extends Model<ISemestre> {
     createSemestreWithPromotionId(data: {designation: string, credits?: number, unites?: Types.ObjectId[]}, promotionId: string): Promise<ISemestre>;
+}
+
+// Interface pour les méthodes statiques du modèle Matiere
+export interface IMatiereModel extends Model<IMatiere> {
+    createMatiereWithUniteId(data: {designation: string, code?: string, descriptions?: string, credits?: number, uniteId: string}): Promise<IMatiere>;
 }
 
 // Schéma Matiere
@@ -88,6 +94,11 @@ const UniteSchema = new Schema<IUnite>({
         min: 1,
         max: 30
     },
+    filiereId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Filiere',
+        required: true
+    },
     matieres: [{
         type: Schema.Types.ObjectId,
         ref: 'Matiere'
@@ -141,6 +152,43 @@ SemestreSchema.pre('save', async function(this: ISemestre) {
     }
 });
 
+//Middleware pour désassocier une matière de son unité lors de la suppression
+MatiereSchema.pre('findOneAndDelete', async function() {
+    const query = this.getQuery();
+    const matiereId = query._id;
+    
+    // Trouver l'unité qui contient cette matière et la retirer
+    await mongoose.model('Unite').updateMany(
+        { matieres: matiereId },
+        { $pull: { matieres: matiereId } }
+    );
+});
+
+MatiereSchema.pre('deleteOne', async function() {
+    const query = this.getQuery();
+    const matiereId = query._id;
+    
+    // Trouver l'unité qui contient cette matière et la retirer
+    await mongoose.model('Unite').updateMany(
+        { matieres: matiereId },
+        { $pull: { matieres: matiereId } }
+    );
+});
+
+MatiereSchema.pre('deleteMany', async function() {
+    const query = this.getQuery();
+    
+    // Récupérer les IDs des matières qui vont être supprimées
+    const matieres = await mongoose.model('Matiere').find(query, '_id');
+    const matiereIds = matieres.map(m => m._id);
+    
+    // Retirer ces matières de toutes les unités
+    await mongoose.model('Unite').updateMany(
+        { matieres: { $in: matiereIds } },
+        { $pull: { matieres: { $in: matiereIds } } }
+    );
+});
+
 //Methode Statitique to create semestre with Promotion id
 SemestreSchema.statics.createSemestreWithPromotionId = async function(data: {designation: string, credits?: number, unites?: Types.ObjectId[]}, promotionId: string) {
     const promotion = await Promotion.findById(promotionId);
@@ -169,8 +217,36 @@ SemestreSchema.statics.createSemestreWithPromotionId = async function(data: {des
     return savedSemestre;
 };
 
+MatiereSchema.statics.createMatiereWithUniteId = async function(data: {designation: string, code?: string, descriptions?: string, credits?: number, uniteId: string}) {
+    const unite = await Unite.findById(data.uniteId);
+    if (!unite) {
+        throw new Error('Unite non trouvée');
+    }
+    
+    // Créer la matiere avec les données fournies
+    const matiereData = {
+        designation: data.designation,
+        code: data.code || '',
+        descriptions: data.descriptions || '',
+        credits: data.credits || 0,
+    };
+    
+    const matiere = new this(matiereData);
+    const savedMatiere = await matiere.save();
+
+    // Ajouter la matiere à l'unite
+    if (!unite.matieres) {
+        unite.matieres = [savedMatiere._id];
+    } else {
+        unite.matieres.push(savedMatiere._id);
+    }
+    await unite.save();
+
+    return savedMatiere;
+};
+
 // Modèles
-const Matiere = mongoose.models.Matiere || mongoose.model<IMatiere>('Matiere', MatiereSchema);
+const Matiere = (mongoose.models.Matiere || mongoose.model<IMatiere, IMatiereModel>('Matiere', MatiereSchema)) as IMatiereModel;
 const Unite = mongoose.models.Unite || mongoose.model<IUnite>('Unite', UniteSchema);
 const Semestre = (mongoose.models.Semestre || mongoose.model<ISemestre, ISemestreModel>('Semestre', SemestreSchema)) as ISemestreModel;
 
