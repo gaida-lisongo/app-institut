@@ -234,6 +234,35 @@ export const addBureauMemberToSection = async (sectionId: string, agentId: strin
   }
 };
 
+// Recupérer les filieres auquel un agent est affecté au bureau de section
+export const fetchFilieresOfSectionByAgentId = async (agentId: string) => {
+  try {
+    const sections = await Section.find({ 'bureau.agent': agentId })
+      .populate({
+        path: 'filieres',
+        populate: {
+          path: 'promotions',
+          model: 'Promotion'
+        }
+      });
+
+    if(!sections || sections.length === 0){
+      return {
+        success: false,
+        error: 'Sections non trouvées'
+      }
+    }
+
+    const filieres = sections.map(section => section.filieres);
+    
+    return { success: true, data: filieres };
+  } catch (error: any) {
+    console.error('Erreur lors de la récupération des filieres:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+
 export default {
   MentionControllers,
   FiliereControllers,
@@ -244,5 +273,6 @@ export default {
   addPromotionToFiliere,
   addFiliereToSection,
   addBureauMemberToFiliere,
-  addBureauMemberToSection
+  addBureauMemberToSection,
+  fetchFilieresOfSectionByAgentId
 };
