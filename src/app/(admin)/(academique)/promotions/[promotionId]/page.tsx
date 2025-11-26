@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { PlusIcon, PencilIcon, TrashIcon } from '../page';
+import { PlusIcon } from '@/icons';
+import { PencilIcon, TrashIcon } from '@/components/icons/Icons';
 
 // Types
 interface Promotion {

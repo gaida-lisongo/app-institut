@@ -11,7 +11,7 @@ import ResultatsPage from "../../st-resultat/page";
 
 // Types pour les animations
 type PageType = 'welcome' | 'dashboard' | 'resultats';
-type DashboardView = 'main' | 'profile' | 'recharge';
+export type DashboardView = 'main' | 'profile' | 'recharge';
 
 
 // Composant principal de la page
