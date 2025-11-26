@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import BulkInscriptionModal from '@/components/inscriptions/BulkInscriptionModal';
+import AccessCard from '@/utils/AccessCard';
 
 // Types
-interface Promotion {
+export interface Promotion {
   _id: string;
   designation: string;
   systeme: string;
@@ -16,14 +17,14 @@ interface Promotion {
   updatedAt: string;
 }
 
-interface Annee {
+export interface Annee {
   _id: string;
   debut: string;
   fin: string;
   isActive: boolean;
 }
 
-interface Parcours {
+export interface Parcours {
   _id: string;
   etudiantId: {
     _id: string;
@@ -389,10 +390,24 @@ export default function InscriptionsCyclePage() {
     setInscriptions(prev => prev.filter(inscription => inscription._id !== parcoursId));
   };
 
-  const printCardAccess = (currentPromotion: Promotion) => {
-    console.log('Current Promotion : ', currentPromotion);
-    console.log('Current Année :', selectedAnnee);
-    console.log('Current Inscriptions :', inscriptions);
+  const printCardAccess = async (currentPromotion: Promotion) => {
+    if (!selectedAnnee) {
+      alert('Aucune année académique sélectionnée.');
+      return;
+    }
+
+    if (inscriptions.length === 0) {
+      alert('Aucune inscription trouvée pour cette promotion.');
+      return;
+    }
+
+    try {
+      const accessCard = new AccessCard(currentPromotion, selectedAnnee, inscriptions);
+      await accessCard.generatePDF();
+    } catch (error) {
+      console.error('Erreur lors de la génération des cartes d\'accès:', error);
+      alert('Erreur lors de la génération des cartes d\'accès.');
+    }
   };
 
   const getCycleLabel = (cycle: string) => {
