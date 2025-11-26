@@ -41,9 +41,10 @@ const RechargeSchema = new Schema<IRecharge>({
         required: true,
         validate: {
             validator: function(v: string) {
-                return /^\+?[1-9]\d{1,14}$/.test(v);
+                // Accepter le format 243XXXXXXXXX (243 suivi de 9 chiffres)
+                return /^243[0-9]{9}$/.test(v);
             },
-            message: 'Numéro de téléphone invalide'
+            message: 'Numéro de téléphone invalide - Format attendu: 243XXXXXXXXX'
         }
     },
     amount: { 

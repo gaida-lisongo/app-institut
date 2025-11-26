@@ -88,6 +88,7 @@ interface ResultatContextType {
   fetchParcours: (inscriptionId: string) => Promise<void>;
   updateProfile: (profileData: Partial<Etudiant>) => Promise<boolean>;
   resetContext: () => void;
+  updateSolde: (solde: number) => void;
   
   // Informations dérivées
   isValidParcours: boolean;
@@ -183,6 +184,16 @@ export const ResultatProvider: React.FC<ResultatProviderProps> = ({ children }) 
     }
   };
 
+  const updateSolde = (solde: number) => {
+    setParcours(prev => prev ? {
+      ...prev,
+      etudiantId: {
+        ...prev.etudiantId,
+        solde: solde
+      }
+    } : null);
+  }
+
   // Fonction pour réinitialiser le contexte
   const resetContext = (): void => {
     setParcours(null);
@@ -217,6 +228,7 @@ export const ResultatProvider: React.FC<ResultatProviderProps> = ({ children }) 
     etudiantInfo,
     promotionInfo,
     anneeInfo,
+    updateSolde
   };
 
   return (
@@ -254,11 +266,6 @@ export const ResultatProvider: React.FC<ResultatProviderProps> = ({ children }) 
                     <div className="text-xs text-gray-400">
                       {etudiantInfo.matricule}
                     </div>
-                  </div>
-                  <div className="h-8 w-8 bg-blue-900 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-blue-400">
-                      {etudiantInfo.nom.charAt(0)}{etudiantInfo.prenom.charAt(0)}
-                    </span>
                   </div>
                 </div>
               )}
