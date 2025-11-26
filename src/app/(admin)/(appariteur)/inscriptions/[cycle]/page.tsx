@@ -64,6 +64,199 @@ const AcademicCapIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const InscriptionsManager = ({inscriptions, onUpdate, onDelete} : {
+  inscriptions: Parcours[];
+  onUpdate?: (parcoursId: string, newStatut: 'En cours' | 'Terminé' | 'Annulé') => void;
+  onDelete?: (parcoursId: string) => void;
+}) => {
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filteredInscriptions, setFilteredInscriptions] = useState<Parcours[]>(inscriptions);
+
+    // Filtrer les inscriptions localement
+    useEffect(() => {
+        if (!searchTerm.trim()) {
+            setFilteredInscriptions(inscriptions);
+        } else {
+            const filtered = inscriptions.filter(inscription => 
+                inscription.etudiantId.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                inscription.etudiantId.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                inscription.etudiantId.matricule.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            setFilteredInscriptions(filtered);
+        }
+    }, [searchTerm, inscriptions]);
+
+    const handleDeleteParcours = async (parcoursId: string) => {
+        if (!confirm('Êtes-vous sûr de vouloir supprimer cette inscription ?')) return;
+        
+        try {
+            const response = await fetch(`/api/parcours/${parcoursId}`, {
+                method: 'DELETE',
+            });
+            
+            if (response.ok) {
+                onDelete?.(parcoursId);
+            } else {
+                alert('Erreur lors de la suppression');
+            }
+        } catch (error) {
+            console.error('Erreur:', error);
+            alert('Erreur lors de la suppression');
+        }
+    };
+
+    const handleUpdateStatut = async (parcoursId: string, newStatut: 'En cours' | 'Terminé' | 'Annulé') => {
+        try {
+            const response = await fetch(`/api/parcours/${parcoursId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ statut: newStatut }),
+            });
+            
+            if (response.ok) {
+                onUpdate?.(parcoursId, newStatut);
+            } else {
+                alert('Erreur lors de la mise à jour');
+            }
+        } catch (error) {
+            console.error('Erreur:', error);
+            alert('Erreur lors de la mise à jour');
+        }
+    };
+
+    const getStatutColor = (statut: string) => {
+        switch (statut) {
+            case 'En cours': return 'bg-green-100 text-green-800 border-green-200';
+            case 'Terminé': return 'bg-blue-100 text-blue-800 border-blue-200';
+            case 'Annulé': return 'bg-red-100 text-red-800 border-red-200';
+            default: return 'bg-gray-100 text-gray-800 border-gray-200';
+        }
+    };
+
+    return (
+        <div className="space-y-6">
+            {/* Barre de recherche */}
+            <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <input
+                    type="text"
+                    placeholder="Rechercher un étudiant (nom, prénom, matricule)..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white placeholder-gray-400"
+                />
+                {searchTerm && (
+                    <button
+                        onClick={() => setSearchTerm('')}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    >
+                        <svg className="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                )}
+            </div>
+
+            {/* Résultats de recherche */}
+            {searchTerm && (
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                    {filteredInscriptions.length} résultat(s) trouvé(s) pour "{searchTerm}"
+                </div>
+            )}
+
+            {/* Grille de cartes */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredInscriptions.map((inscription) => (
+                    <div
+                        key={inscription._id}
+                        className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
+                    >
+                        {/* En-tête de la carte */}
+                        <div className="flex items-start justify-between mb-4">
+                            <div className="flex-1">
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                    {inscription.etudiantId.nom} {inscription.etudiantId.prenom}
+                                </h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                    {inscription.etudiantId.matricule}
+                                </p>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getStatutColor(inscription.statut)}`}>
+                                    {inscription.statut}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Informations de l'étudiant */}
+                        <div className="space-y-2 mb-4">
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-gray-500 dark:text-gray-400">Sexe:</span>
+                                <span className="font-medium text-gray-900 dark:text-white">{inscription.etudiantId.sexe}</span>
+                            </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-600">
+                            {/* Dropdown pour changer le statut */}
+                            <select
+                                value={inscription.statut}
+                                onChange={(e) => handleUpdateStatut(inscription._id, e.target.value as 'En cours' | 'Terminé' | 'Annulé')}
+                                className="text-sm px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                            >
+                                <option value="En cours">En cours</option>
+                                <option value="Terminé">Terminé</option>
+                                <option value="Annulé">Annulé</option>
+                            </select>
+
+                            {/* Bouton de suppression */}
+                            <button
+                                onClick={() => handleDeleteParcours(inscription._id)}
+                                className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                title="Supprimer l'inscription"
+                            >
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Message si aucun résultat */}
+            {filteredInscriptions.length === 0 && (
+                <div className="text-center py-12">
+                    <UsersIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                        {searchTerm ? 'Aucun étudiant trouvé' : 'Aucune inscription'}
+                    </h3>
+                    <p className="text-gray-500 dark:text-gray-400">
+                        {searchTerm 
+                            ? `Aucun étudiant ne correspond à "${searchTerm}"`
+                            : 'Aucun étudiant n\'est encore inscrit dans cette promotion.'
+                        }
+                    </p>
+                    {searchTerm && (
+                        <button
+                            onClick={() => setSearchTerm('')}
+                            className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                        >
+                            Effacer la recherche
+                        </button>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
 export default function InscriptionsCyclePage() {
   const params = useParams();
   const cycle = params.cycle as string;
@@ -182,6 +375,26 @@ export default function InscriptionsCyclePage() {
     setBulkModalPromotionId(null);
   };
 
+  const handleUpdateInscription = (parcoursId: string, newStatut: 'En cours' | 'Terminé' | 'Annulé') => {
+    setInscriptions(prev => 
+      prev.map(inscription => 
+        inscription._id === parcoursId 
+          ? { ...inscription, statut: newStatut }
+          : inscription
+      )
+    );
+  };
+
+  const handleDeleteInscription = (parcoursId: string) => {
+    setInscriptions(prev => prev.filter(inscription => inscription._id !== parcoursId));
+  };
+
+  const printCardAccess = (currentPromotion: Promotion) => {
+    console.log('Current Promotion : ', currentPromotion);
+    console.log('Current Année :', selectedAnnee);
+    console.log('Current Inscriptions :', inscriptions);
+  };
+
   const getCycleLabel = (cycle: string) => {
     const labels: { [key: string]: string } = {
       'Preparatoire': 'Préparatoire',
@@ -201,11 +414,6 @@ export default function InscriptionsCyclePage() {
   };
 
   const CycleIcon = getCycleIcon(cycle);
-
-  console.log('showInscriptions', showInscriptions);
-  console.log('Current annee', selectedAnnee);
-  console.log('Modal bulk :', showBulkModal);
-  console.log('bulkModalPromotionId:', bulkModalPromotionId);
 
   
   // Rendu conditionnel pour les inscriptions
@@ -238,11 +446,11 @@ export default function InscriptionsCyclePage() {
             </div>
             
             <button
-              onClick={() => handleOpenBulkModal(showInscriptions.promotionId!)}
+              onClick={() => printCardAccess(currentPromotion as Promotion)}
               className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
             >
-              <PlusIcon className="h-5 w-5 mr-2" />
-              Inscription en lot (CSV)
+              <UsersIcon className="h-5 w-5 mr-2" />
+              Cartes d'accès
             </button>
           </div>
 
@@ -299,68 +507,11 @@ export default function InscriptionsCyclePage() {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-700">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        Étudiant
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        Matricule
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        Sexe
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        Statut
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    {inscriptions.map((inscription) => (
-                      <tr key={inscription._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900 dark:text-white">
-                            {inscription.etudiantId.nom} {inscription.etudiantId.prenom}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-500 dark:text-gray-400">
-                            {inscription.etudiantId.matricule}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-500 dark:text-gray-400">
-                            {inscription.etudiantId.sexe}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`
-                            px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                            ${inscription.statut === 'En cours' 
-                              ? 'bg-green-100 text-green-800' 
-                              : inscription.statut === 'Terminé'
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-red-100 text-red-800'
-                            }
-                          `}>
-                            {inscription.statut}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <button className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
-                            Modifier
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <InscriptionsManager 
+                inscriptions={inscriptions} 
+                onUpdate={handleUpdateInscription}
+                onDelete={handleDeleteInscription}
+              />
             )}
           </div>
         </div>
