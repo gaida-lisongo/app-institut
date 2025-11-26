@@ -1,11 +1,13 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import './animations.css';
 
 // Types pour le contexte des résultats
 interface Etudiant {
   _id: string;
   nom: string;
+  post_nom?: string;
   prenom: string;
   matricule: string;
   sexe: string;
@@ -15,12 +17,34 @@ interface Etudiant {
   telephone?: string;
 }
 
+interface Semestre {
+  _id: string;
+  designation: string;
+  credits: number;
+  unites: Unite[];
+}
+
+interface Unite {
+  _id: string;
+  designation: string;
+  credits: number;
+  code: string;
+  matieres: Matiere[];
+}
+
+interface Matiere {
+  _id: string;
+  designation: string;
+  credits: number;
+}
+
 interface Promotion {
   _id: string;
   designation: string;
   systeme: string;
   niveau: string;
   cycle: string;
+  semestres: Semestre[];
 }
 
 interface Annee {
