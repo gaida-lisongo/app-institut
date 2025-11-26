@@ -1,17 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
+import initializeModels from '@/lib/initModels';
 import Parcours from '@/models/Parcours';
 import mongoose from 'mongoose';
 
 // GET - Récupérer un parcours par ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
     
-    const { id } = params;
+    // S'assurer que tous les modèles sont enregistrés
+    initializeModels();
+    
+    const { id } = await params;
+    console.log("Current parcous : ", id)
     
     // Validation de l'ID
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -25,8 +30,21 @@ export async function GET(
     }
     
     const parcours = await Parcours.findById(id)
-      .populate('faculteId', 'designation description')
-      .populate('departementId', 'designation description')
+      .populate('etudiantId')
+      .populate({
+        path: 'promotionId',
+        populate: {
+          path: 'semestres',
+          populate: {
+            path: 'unites',
+            populate: {
+              path: 'matieres',
+              
+            }
+          }
+        }
+      })
+      .populate('anneeId')
       .lean();
     
     if (!parcours) {
@@ -60,12 +78,15 @@ export async function GET(
 // PUT - Modifier un parcours
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
     
-    const { id } = params;
+    // S'assurer que tous les modèles sont enregistrés
+    initializeModels();
+    
+    const { id } = await params;
     
     // Validation de l'ID
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -166,12 +187,15 @@ export async function PUT(
 // DELETE - Supprimer un parcours
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
     
-    const { id } = params;
+    // S'assurer que tous les modèles sont enregistrés
+    initializeModels();
+    
+    const { id } = await params;
     
     // Validation de l'ID
     if (!mongoose.Types.ObjectId.isValid(id)) {

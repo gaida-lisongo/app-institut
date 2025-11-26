@@ -52,7 +52,6 @@ const MatiereSchema = new Schema<IMatiere>({
     code: {
         type: String,
         required: true,
-        unique: true,
         trim: true,
         uppercase: true
     },
@@ -129,7 +128,6 @@ const SemestreSchema = new Schema<ISemestre>({
 });
 
 // Index pour optimiser les recherches
-MatiereSchema.index({ code: 1 });
 MatiereSchema.index({ designation: 1 });
 
 UniteSchema.index({ code: 1 });

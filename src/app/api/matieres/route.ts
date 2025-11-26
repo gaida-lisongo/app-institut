@@ -104,15 +104,6 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Vérifier si le code existe déjà
-    const existingMatiere = await Matiere.findOne({ code: code.toUpperCase() });
-    if (existingMatiere) {
-      return NextResponse.json(
-        { success: false, error: 'Une matière avec ce code existe déjà' },
-        { status: 400 }
-      );
-    }
-    
     // Créer la nouvelle matière
     const newMatiere = await Matiere.createMatiereWithUniteId({
       designation: designation.trim(),
@@ -131,13 +122,6 @@ export async function POST(request: NextRequest) {
     
   } catch (error: any) {
     console.error('Erreur lors de la création de la matière:', error);
-    
-    if (error.code === 11000) {
-      return NextResponse.json(
-        { success: false, error: 'Une matière avec ce code existe déjà' },
-        { status: 400 }
-      );
-    }
     
     return NextResponse.json(
       { success: false, error: 'Erreur lors de la création de la matière' },
