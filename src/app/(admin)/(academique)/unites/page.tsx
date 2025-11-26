@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAcademique } from '../layout';
+import { CSVImportModal } from '@/components/csv/CSVImportModal';
+import { csvValidators, csvTransformers } from '@/utils/csvParser';
 
 // Types
 interface Unite {
@@ -51,6 +53,12 @@ const BookOpenIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const ArrowUpTrayIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+  </svg>
+);
+
 export default function UnitesPage() {
   const { selectedFiliere } = useAcademique();
   const [unites, setUnites] = useState<Unite[]>([]);
@@ -71,6 +79,9 @@ export default function UnitesPage() {
   const [showCreateMatiereModal, setShowCreateMatiereModal] = useState(false);
   const [showEditMatiereModal, setShowEditMatiereModal] = useState(false);
   const [selectedMatiere, setSelectedMatiere] = useState<Matiere | null>(null);
+
+  // État pour l'importation CSV
+  const [showImportModal, setShowImportModal] = useState(false);
 
   // États pour les formulaires
   const [newUnite, setNewUnite] = useState({
@@ -373,6 +384,85 @@ export default function UnitesPage() {
     }
   }, [showMatieres.visible, showMatieres.data?._id]);
 
+  // === FONCTIONS D'IMPORTATION CSV ===
+
+  // Champs pour l'import CSV des unités
+  const csvTargetFields = [
+    {
+      key: 'designation',
+      label: 'Désignation',
+      required: true,
+      description: 'Nom de l\'unité d\'enseignement',
+    },
+    {
+      key: 'code',
+      label: 'Code',
+      required: true,
+      description: 'Code unique de l\'unité (ex: UE001)',
+    },
+    {
+      key: 'descriptions',
+      label: 'Description',
+      required: false,
+      description: 'Description optionnelle de l\'unité',
+    },
+    {
+      key: 'credits',
+      label: 'Crédits',
+      required: false,
+      description: 'Nombre de crédits (sera calculé automatiquement si vide)',
+    },
+  ];
+
+  // Importer une unité depuis CSV
+  const handleImportUnite = async (data: Record<string, any>) => {
+    if (!selectedFiliere) {
+      return { success: false, error: 'Aucune filière sélectionnée' };
+    }
+
+    try {
+      const response = await fetch('/api/unites', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...data,
+          filiereId: selectedFiliere._id,
+          credits: data.credits || 1, // Valeur par défaut
+        }),
+      });
+
+      const result = await response.json();
+      
+      return { success: result.success, error: result.error };
+    } catch (error) {
+      return { success: false, error: 'Erreur de connexion au serveur' };
+    }
+  };
+
+  // Gérer la fin de l'import
+  const handleImportComplete = (results: {
+    successful: number;
+    failed: number;
+    errors: any[];
+  }) => {
+    setShowImportModal(false);
+    
+    // Recharger les unités pour afficher les nouvelles données
+    if (selectedFiliere?._id) {
+      fetchUnites(selectedFiliere._id);
+    }
+
+    if (results.successful > 0) {
+      alert(
+        `Import terminé: ${results.successful} unités importées avec succès${
+          results.failed > 0 ? `, ${results.failed} erreurs` : ''
+        }`
+      );
+    }
+  };
+
   // Si aucune filière n'est sélectionnée
   if (!selectedFiliere) {
     return (
@@ -404,13 +494,23 @@ export default function UnitesPage() {
                 </p>
             </div>
             
-            <button
-                onClick={() => setShowCreateModal(true)}
-                className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-            >
-                <PlusIcon className="h-5 w-5 mr-2" />
-                Nouvelle Unité
-            </button>
+            <div className="flex space-x-3">
+              <button
+                  onClick={() => setShowImportModal(true)}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
+              >
+                  <ArrowUpTrayIcon className="h-4 w-4 mr-2" />
+                  Importer CSV
+              </button>
+
+              <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+              >
+                  <PlusIcon className="h-5 w-5 mr-2" />
+                  Nouvelle Unité
+              </button>
+            </div>
             </div>
 
             {/* Statistiques */}
@@ -1067,16 +1167,25 @@ export default function UnitesPage() {
             </div>
           </div>
         )}
+
       </div>
     );
   }
 
-  switch (showMatieres.visible) {
-    case true:
-      return renderUnite();
-    default:
-      return renderUnites();
-  }
-
-
+  return (
+    <div>
+      {/* Contenu principal */}
+      {showMatieres.visible ? renderUnite() : renderUnites()}
+      
+      {/* Modal d'import CSV */}
+      <CSVImportModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        title="Importer des unités d'enseignement depuis un fichier CSV"
+        targetFields={csvTargetFields}
+        onImport={handleImportUnite}
+        onComplete={handleImportComplete}
+      />
+    </div>
+  );
 }

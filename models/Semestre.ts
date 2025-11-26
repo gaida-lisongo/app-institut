@@ -154,7 +154,7 @@ SemestreSchema.pre('save', async function(this: ISemestre) {
 
 //Middleware pour désassocier une matière de son unité lors de la suppression
 MatiereSchema.pre('findOneAndDelete', async function() {
-    const query = this.getQuery();
+    const query = this.getQuery() as any;
     const matiereId = query._id;
     
     // Trouver l'unité qui contient cette matière et la retirer
@@ -165,7 +165,7 @@ MatiereSchema.pre('findOneAndDelete', async function() {
 });
 
 MatiereSchema.pre('deleteOne', async function() {
-    const query = this.getQuery();
+    const query = this.getQuery() as any;
     const matiereId = query._id;
     
     // Trouver l'unité qui contient cette matière et la retirer
