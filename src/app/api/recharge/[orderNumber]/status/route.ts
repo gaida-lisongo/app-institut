@@ -50,7 +50,7 @@ export async function GET(
             const { message, transaction } = paymentResult;
             payload.message = message;
 
-            if(transaction.status != '0'){
+            if(transaction.status == '0'){
                 // Marquer comme complétée
                 recharge.status = 'completed';
                 recharge.transactionId = transaction.reference;
