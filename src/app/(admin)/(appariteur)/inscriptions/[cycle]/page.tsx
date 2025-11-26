@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import BulkInscriptionModal from '@/components/inscriptions/BulkInscriptionModal';
 
 // Types
 interface Promotion {
@@ -77,6 +78,8 @@ export default function InscriptionsCyclePage() {
   }>({ visible: false });
   const [inscriptions, setInscriptions] = useState<Parcours[]>([]);
   const [inscriptionsLoading, setInscriptionsLoading] = useState(false);
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [bulkModalPromotionId, setBulkModalPromotionId] = useState<string | null>(null);
 
   // Écouter les changements d'année depuis le layout
   useEffect(() => {
@@ -162,11 +165,28 @@ export default function InscriptionsCyclePage() {
     setInscriptions([]);
   };
 
+  const handleBulkInscriptionSuccess = () => {
+    // Rafraîchir les inscriptions après un ajout en lot
+    if (showInscriptions.promotionId) {
+      fetchInscriptions(showInscriptions.promotionId);
+    }
+  };
+
+  const handleOpenBulkModal = (promotionId: string) => {
+    setBulkModalPromotionId(promotionId);
+    setShowBulkModal(true);
+  };
+
+  const handleCloseBulkModal = () => {
+    setShowBulkModal(false);
+    setBulkModalPromotionId(null);
+  };
+
   const getCycleLabel = (cycle: string) => {
     const labels: { [key: string]: string } = {
-      'graduat': 'Graduat',
-      'licence': 'Licence', 
-      'master': 'Master'
+      'Preparatoire': 'Préparatoire',
+      'Licence': 'Licence', 
+      'Master': 'Master'
     };
     return labels[cycle] || cycle;
   };
@@ -182,6 +202,12 @@ export default function InscriptionsCyclePage() {
 
   const CycleIcon = getCycleIcon(cycle);
 
+  console.log('showInscriptions', showInscriptions);
+  console.log('Current annee', selectedAnnee);
+  console.log('Modal bulk :', showBulkModal);
+  console.log('bulkModalPromotionId:', bulkModalPromotionId);
+
+  
   // Rendu conditionnel pour les inscriptions
   if (showInscriptions.visible) {
     const currentPromotion = promotions.find(p => p._id === showInscriptions.promotionId);
@@ -212,10 +238,11 @@ export default function InscriptionsCyclePage() {
             </div>
             
             <button
+              onClick={() => handleOpenBulkModal(showInscriptions.promotionId!)}
               className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
             >
               <PlusIcon className="h-5 w-5 mr-2" />
-              Nouvelle Inscription
+              Inscription en lot (CSV)
             </button>
           </div>
 
@@ -410,7 +437,7 @@ export default function InscriptionsCyclePage() {
                 </div>
               </div>
 
-              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600 space-y-2">
                 <button 
                   onClick={() => handleViewInscriptions(promotion._id)}
                   className="w-full flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
@@ -418,10 +445,28 @@ export default function InscriptionsCyclePage() {
                   <EyeIcon className="h-5 w-5 mr-2" />
                   Voir les Inscriptions
                 </button>
+                
+                <button 
+                  onClick={() => handleOpenBulkModal(promotion._id)}
+                  className="w-full flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  <PlusIcon className="h-5 w-5 mr-2" />
+                  Inscription en lot (CSV)
+                </button>
               </div>
             </div>
           ))}
         </div>
+      )}
+      {/* Modal d'inscription en lot */}
+      {showBulkModal && bulkModalPromotionId && selectedAnnee && (
+        <BulkInscriptionModal
+          isOpen={showBulkModal}
+          onClose={handleCloseBulkModal}
+          promotionId={bulkModalPromotionId}
+          anneeId={selectedAnnee._id}
+          onSuccess={handleBulkInscriptionSuccess}
+        />
       )}
     </div>
   );

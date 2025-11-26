@@ -127,7 +127,10 @@ export default function ClassesPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(editPromotion),
+        body: JSON.stringify({
+          ...selectedPromotion,
+          ...editPromotion
+        }),
       });
 
       const result = await response.json();

@@ -133,10 +133,10 @@ export async function POST(request: NextRequest) {
     }
     
     let result;
-    
+    console.log("Parcours data: ", parcoursPayload);
     if (isArray) {
       // Insertion multiple (insertMany)
-      result = await Parcours.insertMany(parcoursData);
+      result = await Parcours.insertMany(parcoursPayload);
       
       return NextResponse.json({
         success: true,
@@ -152,8 +152,6 @@ export async function POST(request: NextRequest) {
       
       // Récupérer le parcours avec les données des relations
       const parcoursComplet = await Parcours.findById(nouveauParcours._id)
-        .populate('faculteId', 'designation')
-        .populate('departementId', 'designation');
       
       return NextResponse.json({
         success: true,
