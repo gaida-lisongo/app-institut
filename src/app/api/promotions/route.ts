@@ -16,8 +16,8 @@ export async function GET(request: NextRequest) {
     const populateFields = populate ? populate.split(',') : ['semestres'];
     let result : any;
     if(cycle){
-      result = await PromotionControllers.getAll(populateFields, { cycle });
-    } else {
+      result = await PromotionControllers.getAll([], { cycle });
+    } else {  
       result = await PromotionControllers.getAll(populateFields);
     }
     

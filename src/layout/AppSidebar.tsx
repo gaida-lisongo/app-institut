@@ -394,15 +394,15 @@ const AppSidebar: React.FC = () => {
                 subItems: [
                   {
                     name: "PREPARATOIRE",
-                    path: "/inscriptions/prepo",
+                    path: "/inscriptions/Preparatoire",
                   },
                   {
                     name: "LICENCE",
-                    path: "/inscriptions/licence",
+                    path: "/inscriptions/Licence",
                   },
                   {
                     name: "MASTER",
-                    path: "/inscriptions/master",
+                    path: "/inscriptions/Master",
                   }
                 ]
               },
