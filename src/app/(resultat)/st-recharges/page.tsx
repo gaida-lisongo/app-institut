@@ -187,20 +187,27 @@ const RechargeSetting = ({ onBack }: { onBack: () => void }) => {
                 const result = await response.json();
                 console.log("Result : ", result);
 
-                const newBalance = result?.data?.newBalance;
-                
-                // Mettre à jour le solde dans le contexte
-                if (result?.data && newBalance !== undefined) {
-                    updateSolde(newBalance);
-                }
+                if(result.success){
 
-                // Mettre à jour la recharge dans la liste
-                setRecharges(prev => prev.map(r => 
-                    r._id === recharge._id ? { ...r, status: 'completed' } : r
-                ));
-                setMessage({ type: 'success', text: 'Solde crédité avec succès' });
-                setShowModal(false);
-                setSelectedRecharge(null);
+                    const newBalance = result?.data?.newBalance;
+                    
+                    // Mettre à jour le solde dans le contexte
+                    if (result?.data && newBalance !== undefined) {
+                        updateSolde(newBalance);
+                    }
+
+                    // Mettre à jour la recharge dans la liste
+                    setRecharges(prev => prev.map(r => 
+                        r._id === recharge._id ? { ...r, status: 'completed' } : r
+                    ));
+                    setMessage({ type: 'success', text: 'Solde crédité avec succès' });
+                    setShowModal(false);
+                    setSelectedRecharge(null);
+
+                } else {
+                    setMessage({ type: 'error', text: result.message || 'Erreur lors du crédit' });
+
+                }
             } else {
                 setMessage({ type: 'error', text: 'Erreur lors du crédit' });
             }
