@@ -193,7 +193,7 @@ export const GradeManager = ({ type }: {type: string}) => {
                                         Modifier
                                     </button>
                                     <button
-                                        onClick={() => handleDelete(grade._id)}
+                                        onClick={() => handleDelete(grade?._id)}
                                         className="text-red-600 hover:text-red-900"
                                     >
                                         Supprimer

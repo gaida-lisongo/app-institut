@@ -18,7 +18,7 @@ class AccessCard {
 
     // Créer une carte d'accès individuelle
     private createSingleCard(inscription: Parcours): any {
-        const qrCodeUrl = `http://172.20.10.14:3000/etudiant/${inscription._id}`;
+        const qrCodeUrl = `https://app.inbtp.net/etudiant/${inscription._id}`;
         const nomComplet = `${inscription.etudiantId.nom} ${inscription.etudiantId.prenom}`;
 
         return {
