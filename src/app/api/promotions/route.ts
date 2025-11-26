@@ -8,12 +8,19 @@ export async function GET(request: NextRequest) {
     await dbConnect();
     
     const { searchParams } = new URL(request.url);
+    const cycle = searchParams.get('cycle')
     const populate = searchParams.get('populate');
+
     
     // Convertir le paramètre populate en tableau
     const populateFields = populate ? populate.split(',') : ['semestres'];
+    let result : any;
+    if(cycle){
+      result = await PromotionControllers.getAll(populateFields, { cycle });
+    } else {
+      result = await PromotionControllers.getAll(populateFields);
+    }
     
-    const result = await PromotionControllers.getAll(populateFields);
     
     if (result.success) {
       return NextResponse.json({

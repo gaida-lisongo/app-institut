@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const filiereId = searchParams.get('filiereId');
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const limit = parseInt(searchParams.get('limit') || '100');
     const search = searchParams.get('search') || '';
     const populate = searchParams.get('populate') === 'true';
     console.log("Filiere Id: ", filiereId);

@@ -4,7 +4,7 @@ import { Mention, Filiere, Promotion, Section } from '@/models/Mention';
 // Interface générique pour les contrôleurs CRUD
 interface CrudController<T extends Document> {
   create: (data: Partial<T>) => Promise<{ success: boolean; data?: T; error?: string }>;
-  getAll: (populate?: string[]) => Promise<{ success: boolean; data?: T[]; error?: string }>;
+  getAll: (populate?: string[], filter?: any) => Promise<{ success: boolean; data?: T[]; error?: string }>;
   getById: (id: string, populate?: string[]) => Promise<{ success: boolean; data?: T; error?: string }>;
   update: (id: string, data: Partial<T>) => Promise<{ success: boolean; data?: T; error?: string }>;
   delete: (id: string) => Promise<{ success: boolean; error?: string }>;
@@ -29,9 +29,9 @@ function createCrudController<T extends Document>(model: Model<T>): CrudControll
     },
 
     // Récupérer tous les éléments
-    async getAll(populate: string[] = []) {
+    async getAll(populate: string[] = [], filter: any= {}) {
       try {
-        let query = model.find();
+        let query = model.find(filter);
         
         // Appliquer les populations si spécifiées
         populate.forEach(field => {

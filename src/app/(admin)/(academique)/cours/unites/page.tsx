@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useAcademique } from '../layout';
+import { useAcademique } from '../../layout';
 import { CSVImportModal } from '@/components/csv/CSVImportModal';
 import { csvValidators, csvTransformers } from '@/utils/csvParser';
 

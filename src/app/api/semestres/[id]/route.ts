@@ -73,44 +73,22 @@ export async function PUT(
     }
     
     const body = await request.json();
-    const { designation, unites } = body;
-    
-    // Validation des champs requis
-    if (!designation) {
+    const { designation, credits, unites } = body;
+
+    const currentSemetre = await Semestre.findById(params.id);
+
+    if (!currentSemetre) {
       return NextResponse.json(
-        { success: false, error: 'La désignation est requise' },
-        { status: 400 }
+        { success: false, error: 'Semestre non trouvé' },
+        { status: 404 }
       );
     }
     
-    // Vérifier si un autre semestre avec cette désignation existe déjà
-    const existingSemestre = await Semestre.findOne({ 
-      designation: { $regex: `^${designation.trim()}$`, $options: 'i' },
-      _id: { $ne: params.id }
-    });
+    currentSemetre.designation = designation || currentSemetre.designation;
+    currentSemetre.credits = credits || currentSemetre.credits;
+    currentSemetre.unites = unites || currentSemetre.unites;
     
-    if (existingSemestre) {
-      return NextResponse.json(
-        { success: false, error: 'Un autre semestre avec cette désignation existe déjà' },
-        { status: 400 }
-      );
-    }
-    
-    const updatedSemestre = await Semestre.findByIdAndUpdate(
-      params.id,
-      {
-        designation: designation.trim(),
-        unites: unites || []
-      },
-      { new: true, runValidators: true }
-    ).populate({
-      path: 'unites',
-      select: 'designation code credits matieres',
-      populate: {
-        path: 'matieres',
-        select: 'designation code credits'
-      }
-    });
+    const updatedSemestre = await currentSemetre.save();
     
     if (!updatedSemestre) {
       return NextResponse.json(
