@@ -266,7 +266,14 @@ export default function EtudiantDetailPage() {
           </button>
         </div>
         
-        {etudiant && <SoldeRecharge etudiant={etudiant} />}
+        {etudiant && (
+          <SoldeRecharge 
+            etudiant={etudiant} 
+            onSoldeUpdate={(newSolde) => {
+              setEtudiant(prev => prev ? { ...prev, solde: newSolde } : null);
+            }}
+          />
+        )}
       </div>
 
       {/* Statistiques des recharges */}

@@ -86,7 +86,7 @@ export async function PUT(
     }
     
     const body = await request.json();
-    const { nom, post_nom, prenom, sexe, matricule, secure } = body;
+    const { nom, post_nom, prenom, sexe, matricule, secure, solde } = body;
     
     // Vérifier si l'étudiant existe
     const etudiantExistant = await Etudiant.findById(id);
@@ -139,6 +139,7 @@ export async function PUT(
     if (sexe) updateData.sexe = sexe;
     if (matricule) updateData.matricule = matricule;
     if (secure) updateData.secure = secure;
+    if (solde) updateData.solde = parseFloat(solde);
     
     // Mettre à jour l'étudiant
     const etudiantMisAJour = await Etudiant.findByIdAndUpdate(

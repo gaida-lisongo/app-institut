@@ -67,19 +67,6 @@ export async function PUT(
       );
     }
     
-    // Vérifier si le code existe déjà (sauf pour cette matière)
-    const existingMatiere = await Matiere.findOne({ 
-      code: code.toUpperCase(),
-      _id: { $ne: params.id }
-    });
-    
-    if (existingMatiere) {
-      return NextResponse.json(
-        { success: false, error: 'Une autre matière avec ce code existe déjà' },
-        { status: 400 }
-      );
-    }
-    
     const updatedMatiere = await Matiere.findByIdAndUpdate(
       params.id,
       {
