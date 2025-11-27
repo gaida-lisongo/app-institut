@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAcademique } from '../layout';
 import { PlusIcon, PencilIcon, TrashIcon, UsersIcon } from '@/components/icons/Icons';
+import { BookOpenIcon } from '@/icons';
+import ManageJury from '@/components/ui/jury/ManageJury';
 
 // Types
 interface Promotion {
@@ -19,13 +21,14 @@ interface Promotion {
 
 export default function ClassesPage() {
   const router = useRouter();
-  const { selectedFiliere, refreshFilieres } = useAcademique();
+  const { selectedFiliere, setSelectedFiliere, refreshFilieres } = useAcademique();
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedPromotion, setSelectedPromotion] = useState<Promotion | null>(null);
+  const [showSetting, setShowSetting] = useState<boolean>(false);
 
   // États pour les formulaires
   const [newPromotion, setNewPromotion] = useState({
@@ -226,18 +229,31 @@ export default function ClassesPage() {
               {selectedFiliere.description}
             </p>
           </div>
-          
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-          >
-            <PlusIcon className="h-5 w-5 mr-2" />
-            Nouvelle Promotion
-          </button>
-        </div>
 
-        {/* Statistiques */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+          <div>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+            >
+              <PlusIcon className="h-5 w-5 mr-2" />
+              Nouvelle Promotion
+            </button>
+            <button
+              onClick={() => setShowSetting(prev => !prev)}
+              className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+            >
+              <BookOpenIcon className="h-5 w-5 mr-2" />
+              Bureau du Jury
+            </button>            
+          </div>
+          
+        </div>
+        
+        {showSetting && (
+            <ManageJury filiere={selectedFiliere} onBack={() => setShowSetting(false)} />
+        )}
+
+        {!showSetting && (<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
           <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
             <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
               {promotions.length}
@@ -264,7 +280,9 @@ export default function ClassesPage() {
               Système Classique
             </div>
           </div>
-        </div>
+        </div>)
+        }
+        
       </div>
 
       {/* Message d'erreur */}

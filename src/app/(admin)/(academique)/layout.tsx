@@ -4,7 +4,7 @@ import React, { useState, useEffect, createContext, useContext } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 
 // Types
-interface Filiere {
+export interface Filiere {
   _id: string;
   designation: string;
   description: string;

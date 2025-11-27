@@ -117,7 +117,7 @@ const FiliereSchema = new Schema<IFiliere>({
     role: {
       type: String,
       required: true,
-      enum: ['Chef de Filière', 'Secrétaire', 'Membre']
+      enum: ['Président', 'Secrétaire', 'Membre']
     }
   }],
   promotions: [{
