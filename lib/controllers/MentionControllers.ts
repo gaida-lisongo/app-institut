@@ -4,7 +4,7 @@ import { Mention, Filiere, Promotion, Section } from '@/models/Mention';
 // Interface générique pour les contrôleurs CRUD
 interface CrudController<T extends Document> {
   create: (data: Partial<T>) => Promise<{ success: boolean; data?: T; error?: string }>;
-  getAll: (populate?: string[]) => Promise<{ success: boolean; data?: T[]; error?: string }>;
+  getAll: (populate?: string[], filter?: any) => Promise<{ success: boolean; data?: T[]; error?: string }>;
   getById: (id: string, populate?: string[]) => Promise<{ success: boolean; data?: T; error?: string }>;
   update: (id: string, data: Partial<T>) => Promise<{ success: boolean; data?: T; error?: string }>;
   delete: (id: string) => Promise<{ success: boolean; error?: string }>;
@@ -29,9 +29,9 @@ function createCrudController<T extends Document>(model: Model<T>): CrudControll
     },
 
     // Récupérer tous les éléments
-    async getAll(populate: string[] = []) {
+    async getAll(populate: string[] = [], filter: any= {}) {
       try {
-        let query = model.find();
+        let query = model.find(filter);
         
         // Appliquer les populations si spécifiées
         populate.forEach(field => {
@@ -234,6 +234,35 @@ export const addBureauMemberToSection = async (sectionId: string, agentId: strin
   }
 };
 
+// Recupérer les filieres auquel un agent est affecté au bureau de section
+export const fetchFilieresOfSectionByAgentId = async (agentId: string) => {
+  try {
+    const sections = await Section.find({ 'bureau.agent': agentId })
+      .populate({
+        path: 'filieres',
+        populate: {
+          path: 'promotions',
+          model: 'Promotion'
+        }
+      });
+
+    if(!sections || sections.length === 0){
+      return {
+        success: false,
+        error: 'Sections non trouvées'
+      }
+    }
+
+    const filieres = sections.map(section => section.filieres);
+    
+    return { success: true, data: filieres };
+  } catch (error: any) {
+    console.error('Erreur lors de la récupération des filieres:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+
 export default {
   MentionControllers,
   FiliereControllers,
@@ -244,5 +273,6 @@ export default {
   addPromotionToFiliere,
   addFiliereToSection,
   addBureauMemberToFiliere,
-  addBureauMemberToSection
+  addBureauMemberToSection,
+  fetchFilieresOfSectionByAgentId
 };

@@ -1,0 +1,20 @@
+# Ignorer les fichiers de build
+.next/
+out/
+dist/
+
+# Ignorer les dépendances
+node_modules/
+
+# Ignorer les fichiers de configuration
+*.config.js
+*.config.ts
+
+# Ignorer les fichiers de test
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+
+# Ignorer les fichiers de type
+*.d.ts

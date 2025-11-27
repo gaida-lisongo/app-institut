@@ -12,4 +12,5 @@ const EnseignantsPage = () => {
     );
 };
 
+
 export default EnseignantsPage;

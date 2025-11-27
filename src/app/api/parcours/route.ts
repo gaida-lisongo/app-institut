@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
 import Parcours from '@/models/Parcours';
+import Etudiant from '@/models/Etudiant';
 
 // GET - Récupérer tous les parcours ou rechercher
 export async function GET(request: NextRequest) {
@@ -8,47 +9,19 @@ export async function GET(request: NextRequest) {
     await dbConnect();
     
     const { searchParams } = new URL(request.url);
-    const search = searchParams.get('search');
+    
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const niveau = searchParams.get('niveau');
-    const faculteId = searchParams.get('faculteId');
-    const departementId = searchParams.get('departementId');
-    const isActive = searchParams.get('isActive');
+    const limit = parseInt(searchParams.get('limit') || '1000');
+    const etudiantId = searchParams.get('etudiantId');
+    const promotionId = searchParams.get('promotionId');
+    const anneeId = searchParams.get('anneeId');
+    const statut = searchParams.get('statut');
     const sortBy = searchParams.get('sortBy') || 'designation';
     const sortOrder = searchParams.get('sortOrder') || 'asc';
     
+    
+    
     let query: any = {};
-    
-    // Filtrage par recherche
-    if (search) {
-      const regex = new RegExp(search, 'i');
-      query.$or = [
-        { designation: regex },
-        { description: regex },
-        { code: regex }
-      ];
-    }
-    
-    // Filtrage par niveau
-    if (niveau && ['Licence', 'Master', 'Doctorat', 'Graduat'].includes(niveau)) {
-      query.niveau = niveau;
-    }
-    
-    // Filtrage par faculté
-    if (faculteId) {
-      query.faculteId = faculteId;
-    }
-    
-    // Filtrage par département
-    if (departementId) {
-      query.departementId = departementId;
-    }
-    
-    // Filtrage par statut actif
-    if (isActive !== null && isActive !== undefined) {
-      query.isActive = isActive === 'true';
-    }
     
     // Calcul de la pagination
     const skip = (page - 1) * limit;
@@ -56,12 +29,29 @@ export async function GET(request: NextRequest) {
     // Construction du tri
     const sortOptions: any = {};
     sortOptions[sortBy] = sortOrder === 'asc' ? 1 : -1;
+
+    if(etudiantId){
+      query.etudiantId = etudiantId;
+    }
+    
+    if(promotionId){
+      query.promotionId = promotionId;
+    }
+    
+    if(anneeId){
+      query.anneeId = anneeId;
+    }
+    
+    if(statut){
+      query.statut = statut;
+    }
     
     // Exécution de la requête avec pagination
     const [parcours, total] = await Promise.all([
       Parcours.find(query)
-        .populate('faculteId', 'designation')
-        .populate('departementId', 'designation')
+        .populate('etudiantId')
+        .populate('promotionId')
+        .populate('anneeId')
         .sort(sortOptions)
         .skip(skip)
         .limit(limit)
@@ -103,13 +93,15 @@ export async function POST(request: NextRequest) {
     // Vérifier si c'est un tableau (insertMany) ou un objet unique
     const isArray = Array.isArray(body);
     const parcoursData = isArray ? body : [body];
+
+    const parcoursPayload = [];
     
     // Validation des données
     for (const parcours of parcoursData) {
-      const { designation, code, duree, credits, niveau } = parcours;
+      const { matricule, promotionId, anneeId, statut } = parcours;
       
       // Validation des champs requis
-      if (!designation || !duree || !credits || !niveau) {
+      if (!matricule || !promotionId || !anneeId) {
         return NextResponse.json(
           { 
             success: false, 
@@ -118,60 +110,33 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
+
+      const etudiant = await Etudiant.findOne({ matricule });
       
       // Validation du niveau
-      if (!['Licence', 'Master', 'Doctorat', 'Graduat'].includes(niveau)) {
+      if (!etudiant) {
         return NextResponse.json(
           { 
             success: false, 
-            error: 'Le niveau doit être: Licence, Master, Doctorat ou Graduat' 
+            error: 'L\'etudiant n\'existe pas, ayant le matricule ' + matricule 
           },
           { status: 400 }
         );
       }
-      
-      // Validation de la durée
-      if (isNaN(duree) || duree < 1 || duree > 10) {
-        return NextResponse.json(
-          { 
-            success: false, 
-            error: 'La durée doit être entre 1 et 10 ans' 
-          },
-          { status: 400 }
-        );
-      }
-      
-      // Validation des crédits
-      if (isNaN(credits) || credits < 30 || credits > 500) {
-        return NextResponse.json(
-          { 
-            success: false, 
-            error: 'Le nombre de crédits doit être entre 30 et 500' 
-          },
-          { status: 400 }
-        );
-      }
-      
-      // Vérifier l'unicité du code si fourni
-      if (code) {
-        const existingParcours = await Parcours.findOne({ code: code.toUpperCase() });
-        if (existingParcours) {
-          return NextResponse.json(
-            { 
-              success: false, 
-              error: `Un parcours avec le code ${code} existe déjà` 
-            },
-            { status: 409 }
-          );
-        }
-      }
+
+      parcoursPayload.push({
+        etudiantId: etudiant._id,
+        promotionId,
+        anneeId,
+        statut
+      });
     }
     
     let result;
-    
+    console.log("Parcours data: ", parcoursPayload);
     if (isArray) {
       // Insertion multiple (insertMany)
-      result = await Parcours.insertMany(parcoursData);
+      result = await Parcours.insertMany(parcoursPayload);
       
       return NextResponse.json({
         success: true,
@@ -187,8 +152,6 @@ export async function POST(request: NextRequest) {
       
       // Récupérer le parcours avec les données des relations
       const parcoursComplet = await Parcours.findById(nouveauParcours._id)
-        .populate('faculteId', 'designation')
-        .populate('departementId', 'designation');
       
       return NextResponse.json({
         success: true,

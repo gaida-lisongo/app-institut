@@ -28,7 +28,7 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const limit = parseInt(searchParams.get('limit') || '1000');
     
     // Vérifier si l'étudiant existe
     const etudiant = await Etudiant.findById(id);

@@ -1,17 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
+import initializeModels from '@/lib/initModels';
 import Parcours from '@/models/Parcours';
 import mongoose from 'mongoose';
 
 // GET - Récupérer un parcours par ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
     
-    const { id } = params;
+    // S'assurer que tous les modèles sont enregistrés
+    initializeModels();
+    
+    const { id } = await params;
+    console.log("Current parcous : ", id)
     
     // Validation de l'ID
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -25,8 +30,21 @@ export async function GET(
     }
     
     const parcours = await Parcours.findById(id)
-      .populate('faculteId', 'designation description')
-      .populate('departementId', 'designation description')
+      .populate('etudiantId')
+      .populate({
+        path: 'promotionId',
+        populate: {
+          path: 'semestres',
+          populate: {
+            path: 'unites',
+            populate: {
+              path: 'matieres',
+              
+            }
+          }
+        }
+      })
+      .populate('anneeId')
       .lean();
     
     if (!parcours) {
@@ -60,12 +78,15 @@ export async function GET(
 // PUT - Modifier un parcours
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
     
-    const { id } = params;
+    // S'assurer que tous les modèles sont enregistrés
+    initializeModels();
+    
+    const { id } = await params;
     
     // Validation de l'ID
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -80,18 +101,10 @@ export async function PUT(
     
     const body = await request.json();
     const { 
-      designation, 
-      description, 
-      code, 
-      duree, 
-      credits, 
-      niveau, 
-      faculteId, 
-      departementId, 
-      isActive,
-      prerequis,
-      objectifs,
-      debouches
+      etudiantId,
+      promotionId,
+      anneeId,
+      statut
     } = body;
     
     // Vérifier si le parcours existe
@@ -106,81 +119,25 @@ export async function PUT(
       );
     }
     
-    // Validation du niveau si fourni
-    if (niveau && !['Licence', 'Master', 'Doctorat', 'Graduat'].includes(niveau)) {
+    // Validation du statut si fourni
+    if (statut && !['En cours', 'Terminé', 'Annulé'].includes(statut)) {
       return NextResponse.json(
         { 
           success: false, 
-          error: 'Le niveau doit être: Licence, Master, Doctorat ou Graduat' 
+          error: 'Le statut doit être: En cours, Terminé ou Annulé' 
         },
         { status: 400 }
       );
     }
-    
-    // Validation de la durée si fournie
-    if (duree !== undefined && (isNaN(duree) || duree < 1 || duree > 10)) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'La durée doit être entre 1 et 10 ans' 
-        },
-        { status: 400 }
-      );
-    }
-    
-    // Validation des crédits si fournis
-    if (credits !== undefined && (isNaN(credits) || credits < 30 || credits > 500)) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Le nombre de crédits doit être entre 30 et 500' 
-        },
-        { status: 400 }
-      );
-    }
-    
-    // Vérifier l'unicité du code si modifié
-    if (code && code.toUpperCase() !== parcoursExistant.code) {
-      const existingParcours = await Parcours.findOne({ 
-        code: code.toUpperCase(), 
-        _id: { $ne: id } 
-      });
-      if (existingParcours) {
-        return NextResponse.json(
-          { 
-            success: false, 
-            error: 'Un parcours avec ce code existe déjà' 
-          },
-          { status: 409 }
-        );
-      }
-    }
-    
-    // Préparer les données de mise à jour
-    const updateData: any = {};
-    if (designation) updateData.designation = designation.trim();
-    if (description !== undefined) updateData.description = description?.trim();
-    if (code) updateData.code = code.toUpperCase().trim();
-    if (duree !== undefined) updateData.duree = parseInt(duree);
-    if (credits !== undefined) updateData.credits = parseInt(credits);
-    if (niveau) updateData.niveau = niveau;
-    if (faculteId !== undefined) updateData.faculteId = faculteId || null;
-    if (departementId !== undefined) updateData.departementId = departementId || null;
-    if (isActive !== undefined) updateData.isActive = Boolean(isActive);
-    if (prerequis !== undefined) updateData.prerequis = prerequis;
-    if (objectifs !== undefined) updateData.objectifs = objectifs;
-    if (debouches !== undefined) updateData.debouches = debouches;
     
     // Mettre à jour le parcours
     const parcoursMisAJour = await Parcours.findByIdAndUpdate(
       id,
-      updateData,
-      { 
-        new: true, 
-        runValidators: true 
-      }
-    ).populate('faculteId', 'designation description')
-     .populate('departementId', 'designation description');
+      { etudiantId, promotionId, anneeId, statut },
+      { new: true }
+    ).populate('etudiantId')
+    .populate('promotionId')
+    .populate('anneeId');
     
     return NextResponse.json({
       success: true,
@@ -230,12 +187,15 @@ export async function PUT(
 // DELETE - Supprimer un parcours
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
     
-    const { id } = params;
+    // S'assurer que tous les modèles sont enregistrés
+    initializeModels();
+    
+    const { id } = await params;
     
     // Validation de l'ID
     if (!mongoose.Types.ObjectId.isValid(id)) {

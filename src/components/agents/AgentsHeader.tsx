@@ -87,7 +87,7 @@ export default function AgentsHeader({ className = '' }: AgentsHeaderProps) {
                   },
                   // QR Code (3/4 de la hauteur)
                   {
-                    qr: `http://172.20.10.14:3000/signin/${agent._id}`,
+                    qr: `https://app.inbtp.net/signin/${agent._id}`,
                     fit: 100,
                     alignment: 'center',
                     margin: [0, 0, 0, 3]

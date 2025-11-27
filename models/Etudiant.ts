@@ -21,6 +21,11 @@ export interface IEtudiant extends Document {
     matricule: string;
     secure: string;
     sexe: 'M' | 'F';
+    photo?: string;
+    solde?: number;
+    nationalite?: string;
+    lieu_naissance?: string;
+    date_naissance?: string;
     // Méthodes d'instance
     getFullName(): string;
 }
@@ -74,6 +79,11 @@ const EtudiantSchema = new Schema<IEtudiant>({
         required: true, 
         enum: ['M', 'F'] 
     },
+    photo: { type: String },
+    solde: { type: Number, default: 0 },
+    nationalite: { type: String },
+    lieu_naissance: { type: String },
+    date_naissance: { type: Date },
 }, {
     timestamps: true
 });

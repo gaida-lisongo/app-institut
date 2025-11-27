@@ -2,99 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { Etudiant, Recharge, RechargeStats } from '@/types/etudiant';
+import { ArrowLeftIcon, ChartBarIcon, CheckCircleIcon, ClockIcon, CreditCardIcon, ExclamationCircleIcon, XCircleIcon } from '@/icons';
+import RechargeCard from '@/components/ui/etudiants/RechargeCard';
+import SoldeRecharge from '@/components/ui/etudiants/SoldeRecharge';
 
-// Composants d'icônes SVG
-const ArrowLeftIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-  </svg>
-);
-
-const CreditCardIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-  </svg>
-);
-
-const PencilIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-  </svg>
-);
-
-const TrashIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-  </svg>
-);
-
-const CheckCircleIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
-
-const XCircleIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
-
-const ClockIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
-
-const ExclamationCircleIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
-
-const ChartBarIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-  </svg>
-);
-
-interface Recharge {
-  _id: string;
-  orderNumber: string;
-  currency: string;
-  phone: string;
-  amount: number;
-  description: string;
-  status: 'pending' | 'completed' | 'failed' | 'cancelled';
-  etudiantId: string;
-  transactionId?: string;
-  paymentMethod?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface Etudiant {
-  _id: string;
-  nom: string;
-  post_nom: string;
-  prenom?: string;
-  matricule: string;
-  secure: string;
-  sexe: 'M' | 'F';
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface RechargeStats {
-  total: number;
-  totalAmount: number;
-  pending: number;
-  completed: number;
-  failed: number;
-  cancelled: number;
-  pendingAmount: number;
-  completedAmount: number;
-}
 
 export default function EtudiantDetailPage() {
   const router = useRouter();
@@ -117,10 +29,13 @@ export default function EtudiantDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState('');
+  const [phoneFilter, setPhoneFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedRecharge, setSelectedRecharge] = useState<Recharge | null>(null);
   const [newStatus, setNewStatus] = useState<'pending' | 'completed' | 'failed' | 'cancelled'>('pending');
+  const [filteredRecharges, setFilteredRecharges] = useState<Recharge[]>([]);
 
   // Récupérer les données de l'étudiant
   const fetchEtudiant = async () => {
@@ -210,6 +125,34 @@ export default function EtudiantDetailPage() {
     }
   }, [etudiantId, statusFilter]);
 
+  // Filtrer les recharges localement
+  useEffect(() => {
+    let filtered = recharges;
+
+    // Filtrer par statut
+    if (statusFilter) {
+      filtered = filtered.filter(recharge => recharge.status === statusFilter);
+    }
+
+    // Filtrer par téléphone
+    if (phoneFilter.trim()) {
+      filtered = filtered.filter(recharge => 
+        recharge.phone.toLowerCase().includes(phoneFilter.toLowerCase().trim())
+      );
+    }
+
+    // Filtrer par date
+    if (dateFilter) {
+      const filterDate = new Date(dateFilter);
+      filtered = filtered.filter(recharge => {
+        const rechargeDate = new Date(recharge.createdAt);
+        return rechargeDate.toDateString() === filterDate.toDateString();
+      });
+    }
+
+    setFilteredRecharges(filtered);
+  }, [recharges, statusFilter, phoneFilter, dateFilter]);
+
   // Modifier le statut d'une recharge
   const handleUpdateStatus = async () => {
     if (!selectedRecharge) return;
@@ -262,30 +205,21 @@ export default function EtudiantDetailPage() {
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <CheckCircleIcon className="h-5 w-5 text-green-500" />;
-      case 'failed':
-        return <XCircleIcon className="h-5 w-5 text-red-500" />;
-      case 'cancelled':
-        return <ExclamationCircleIcon className="h-5 w-5 text-gray-500" />;
-      default:
-        return <ClockIcon className="h-5 w-5 text-yellow-500" />;
-    }
-  };
+  const getAmountStatus = (status: string) => {
+    const rechargesByStatus = recharges.filter(recharge => status === 'all' ? true : recharge.status === status);
+    console.log(status, ' rechargesByStatus', recharges);
+    const data = {
+      'cdf': rechargesByStatus.reduce((acc, recharge) => acc + (recharge.currency === 'CDF' ? recharge.amount : 0), 0),
+      'usd': rechargesByStatus.reduce((acc, recharge) => acc + (recharge.currency === 'USD' ? recharge.amount : 0), 0),
+    };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
-      case 'failed':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400';
-      case 'cancelled':
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
-      default:
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400';
-    }
+    // Ici les items doivent être côte à côte avec justify-between
+    return (
+      <div className="flex items-center justify-between w-full mt-1">
+        <span className="text-sm text-gray-500 dark:text-gray-400">{data.cdf.toFixed(2)} CDF</span>
+        <span className="text-sm text-gray-500 dark:text-gray-400">{data.usd.toFixed(2)} USD</span>
+      </div>
+    );
   };
 
   if (loading) {
@@ -332,44 +266,7 @@ export default function EtudiantDetailPage() {
           </button>
         </div>
         
-        {etudiant && (
-          <div className="flex items-start space-x-4">
-            <div className="flex-shrink-0">
-              <div className="h-16 w-16 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
-                <span className="text-xl font-medium text-blue-600 dark:text-blue-400">
-                  {etudiant.nom.charAt(0)}{etudiant.post_nom.charAt(0)}
-                </span>
-              </div>
-            </div>
-            
-            <div className="flex-1">
-              <div className="flex items-center space-x-3 mb-2">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {etudiant.nom} {etudiant.post_nom} {etudiant.prenom}
-                </h1>
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  etudiant.sexe === 'M' 
-                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
-                    : 'bg-pink-100 text-pink-800 dark:bg-pink-900/20 dark:text-pink-400'
-                }`}>
-                  {etudiant.sexe === 'M' ? 'Masculin' : 'Féminin'}
-                </span>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-500 dark:text-gray-400">
-                <div>
-                  <span className="font-medium">Matricule:</span> {etudiant.matricule}
-                </div>
-                <div>
-                  <span className="font-medium">Code sécurisé:</span> {etudiant.secure}
-                </div>
-                <div>
-                  <span className="font-medium">Inscrit le:</span> {new Date(etudiant.createdAt).toLocaleDateString()}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {etudiant && <SoldeRecharge etudiant={etudiant} />}
       </div>
 
       {/* Statistiques des recharges */}
@@ -382,9 +279,9 @@ export default function EtudiantDetailPage() {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Recharges</p>
               <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.total}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">${stats.totalAmount.toFixed(2)}</p>
             </div>
           </div>
+          {getAmountStatus('all')}
         </div>
         
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
@@ -395,9 +292,9 @@ export default function EtudiantDetailPage() {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Complétées</p>
               <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.completed}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">${stats.completedAmount.toFixed(2)}</p>
             </div>
           </div>
+          {getAmountStatus('completed')}
         </div>
         
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
@@ -408,9 +305,9 @@ export default function EtudiantDetailPage() {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">En attente</p>
               <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.pending}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">${stats.pendingAmount.toFixed(2)}</p>
             </div>
           </div>
+          {getAmountStatus('pending')}
         </div>
         
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
@@ -421,44 +318,103 @@ export default function EtudiantDetailPage() {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Échouées</p>
               <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.failed + stats.cancelled}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Échec + Annulé</p>
             </div>
           </div>
+          {getAmountStatus('failed')}
         </div>
       </div>
 
       {/* Filtres */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <div className="flex items-center space-x-4">
-          <h2 className="text-lg font-medium text-gray-900 dark:text-white">Recharges</h2>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-          >
-            <option value="">Tous les statuts</option>
-            <option value="pending">En attente</option>
-            <option value="completed">Complétées</option>
-            <option value="failed">Échouées</option>
-            <option value="cancelled">Annulées</option>
-          </select>
+        <div className="mb-4">
+          <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Recharges</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Filtre par statut */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Statut
+              </label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="">Tous les statuts</option>
+                <option value="pending">En attente</option>
+                <option value="completed">Complétées</option>
+                <option value="failed">Échouées</option>
+                <option value="cancelled">Annulées</option>
+              </select>
+            </div>
+
+            {/* Filtre par téléphone */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Téléphone
+              </label>
+              <input
+                type="text"
+                value={phoneFilter}
+                onChange={(e) => setPhoneFilter(e.target.value)}
+                placeholder="Rechercher par téléphone..."
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+              />
+            </div>
+
+            {/* Filtre par date */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Date
+              </label>
+              <input
+                type="date"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              />
+            </div>
+
+            {/* Bouton pour effacer les filtres */}
+            <div className="flex items-end">
+              <button
+                onClick={() => {
+                  setStatusFilter('');
+                  setPhoneFilter('');
+                  setDateFilter('');
+                }}
+                className="w-full px-4 py-2 bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
+              >
+                Effacer filtres
+              </button>
+            </div>
+          </div>
+
+          {/* Affichage du nombre de résultats */}
+          <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+            {filteredRecharges.length} recharge{filteredRecharges.length !== 1 ? 's' : ''} trouvée{filteredRecharges.length !== 1 ? 's' : ''}
+            {(statusFilter || phoneFilter || dateFilter) && ` sur ${recharges.length} au total`}
+          </div>
         </div>
       </div>
 
       {/* Liste des recharges */}
-      {recharges.length === 0 ? (
+      {filteredRecharges.length === 0 ? (
         <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
           <CreditCardIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-            Aucune recharge trouvée
+            {recharges.length === 0 ? 'Aucune recharge trouvée' : 'Aucun résultat'}
           </h3>
           <p className="text-gray-500 dark:text-gray-400">
-            {statusFilter ? 'Aucune recharge avec ce statut' : 'Cet étudiant n\'a pas encore de recharges'}
+            {recharges.length === 0 
+              ? 'Cet étudiant n\'a pas encore de recharges'
+              : 'Aucune recharge ne correspond aux critères de recherche'
+            }
           </p>
         </div>
       ) : (
         <div className="space-y-4">
-          {recharges.map((recharge) => (
+          {filteredRecharges.map((recharge) => (
             <RechargeCard
               key={recharge._id}
               recharge={recharge}
@@ -573,96 +529,6 @@ export default function EtudiantDetailPage() {
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-// Composant carte de recharge
-interface RechargeCardProps {
-  recharge: Recharge;
-  onEdit: (recharge: Recharge) => void;
-  onDelete: (recharge: Recharge) => void;
-}
-
-function RechargeCard({ recharge, onEdit, onDelete }: RechargeCardProps) {
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <CheckCircleIcon className="h-5 w-5 text-green-500" />;
-      case 'failed':
-        return <XCircleIcon className="h-5 w-5 text-red-500" />;
-      case 'cancelled':
-        return <ExclamationCircleIcon className="h-5 w-5 text-gray-500" />;
-      default:
-        return <ClockIcon className="h-5 w-5 text-yellow-500" />;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
-      case 'failed':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400';
-      case 'cancelled':
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
-      default:
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400';
-    }
-  };
-
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center space-x-3 mb-2">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-              {recharge.orderNumber}
-            </h3>
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(recharge.status)}`}>
-              {getStatusIcon(recharge.status)}
-              <span className="ml-1 capitalize">{recharge.status}</span>
-            </span>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-500 dark:text-gray-400">
-            <div>
-              <span className="font-medium">Montant:</span> ${recharge.amount} {recharge.currency}
-            </div>
-            <div>
-              <span className="font-medium">Téléphone:</span> {recharge.phone}
-            </div>
-            <div>
-              <span className="font-medium">Créé le:</span> {new Date(recharge.createdAt).toLocaleDateString()}
-            </div>
-            <div>
-              <span className="font-medium">Mis à jour:</span> {new Date(recharge.updatedAt).toLocaleDateString()}
-            </div>
-          </div>
-          
-          <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
-            {recharge.description}
-          </p>
-        </div>
-        
-        <div className="flex items-center space-x-2 ml-4">
-          <button
-            onClick={() => onEdit(recharge)}
-            className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded-md transition-colors"
-            title="Modifier le statut"
-          >
-            <PencilIcon className="h-4 w-4" />
-          </button>
-          
-          <button
-            onClick={() => onDelete(recharge)}
-            className="p-2 text-red-600 hover:text-red-800 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-md transition-colors"
-            title="Supprimer"
-          >
-            <TrashIcon className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

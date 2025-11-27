@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MentionControllers } from '@/lib/controllers/MentionControllers';
+import { MentionControllers, fetchFilieresOfSectionByAgentId } from '@/lib/controllers/MentionControllers';
 import dbConnect from '@/lib/dbConnect';
 
 // GET - Récupérer toutes les mentions
@@ -9,23 +9,41 @@ export async function GET(request: NextRequest) {
     
     const { searchParams } = new URL(request.url);
     const populate = searchParams.get('populate');
-    
-    // Convertir le paramètre populate en tableau
-    const populateFields = populate ? populate.split(',') : ['filieres'];
-    
-    const result = await MentionControllers.getAll(populateFields);
-    
-    if (result.success) {
-      return NextResponse.json({
-        success: true,
-        data: result.data,
-        count: result.data?.length || 0
-      });
+    const agentId = searchParams.get('agentId');
+
+    if(agentId){
+      const result = await fetchFilieresOfSectionByAgentId(agentId.toString());
+      if (result.success) {
+        return NextResponse.json({
+          success: true,
+          data: result.data,
+          count: result.data?.length || 0
+        });
+      } else {
+        return NextResponse.json(
+          { success: false, error: result.error },
+          { status: 400 }
+        );
+      }
     } else {
-      return NextResponse.json(
-        { success: false, error: result.error },
-        { status: 400 }
-      );
+      // Convertir le paramètre populate en tableau
+      const populateFields = populate ? populate.split(',') : ['filieres'];
+      
+      const result = await MentionControllers.getAll(populateFields);
+      
+      if (result.success) {
+        return NextResponse.json({
+          success: true,
+          data: result.data,
+          count: result.data?.length || 0
+        });
+      } else {
+        return NextResponse.json(
+          { success: false, error: result.error },
+          { status: 400 }
+        );
+      }
+
     }
   } catch (error: any) {
     console.error('Erreur API mentions GET:', error);
