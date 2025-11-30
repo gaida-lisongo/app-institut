@@ -1,19 +1,6 @@
 import mongoose, { Schema, Document, Model, Types } from 'mongoose';
 import crypto from 'crypto';
 
-
-export interface IInscription extends Document {
-    promotionId: Types.ObjectId;
-    etudiantId: Types.ObjectId;
-    anneeId: Types.ObjectId;
-    notes: [{
-        matiereId: Types.ObjectId,
-        cmi: number;
-        examen: number;
-        rattrapage: number
-    }]
-}
-
 export interface IEtudiant extends Document {
     nom: string;
     post_nom: string;
@@ -29,22 +16,6 @@ export interface IEtudiant extends Document {
     // Méthodes d'instance
     getFullName(): string;
 }
-
-
-// Schema pour les inscriptions
-const InscriptionSchema = new Schema<IInscription>({
-    promotionId: { type: Schema.Types.ObjectId, ref: 'Promotion', required: true },
-    etudiantId: { type: Schema.Types.ObjectId, ref: 'Etudiant', required: true },
-    anneeId: { type: Schema.Types.ObjectId, ref: 'Annee', required: true },
-    notes: [{
-        matiereId: { type: Schema.Types.ObjectId, ref: 'Matiere', required: true },
-        cmi: { type: Number, min: 0, max: 20, default: 0 },
-        examen: { type: Number, min: 0, max: 20, default: 0 },
-        rattrapage: { type: Number, min: 0, max: 20, default: 0 }
-    }]
-}, {
-    timestamps: true
-});
 
 // Fonction pour générer un matricule unique
 function generateMatricule(): string {
@@ -125,8 +96,6 @@ EtudiantSchema.statics.searchByName = function(searchTerm: string) {
     });
 };
 
-// Modèles
-export const Inscription: Model<IInscription> = mongoose.models.Inscription || mongoose.model<IInscription>('Inscription', InscriptionSchema);
 export const Etudiant: Model<IEtudiant> = mongoose.models.Etudiant || mongoose.model<IEtudiant>('Etudiant', EtudiantSchema);
 
 export default Etudiant;

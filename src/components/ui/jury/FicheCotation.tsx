@@ -1,41 +1,88 @@
 'use client'
+import { Annee, Etudiant, Promotion } from "@/app/(resultat)/layout";
 import React, { useState, useEffect } from "react";
 
-interface Etudiant {
+interface ParcoursEtudiant {
     _id: string;
-    nom: string;
-    prenom: string;
-    matricule: string;
-    cmi?: number;
-    examen?: number;
-    rattrapage?: number;
+    etudiantId: Etudiant;
+    anneeId: Annee;
+    promotionId: Promotion;
+    statut: string;
+    notes?: {
+        matiereId: string;
+        cmi?: number;
+        examen?: number;
+        rattrapage?: number;
+    }[]
 }
 
 interface FicheCotationProps {
     selectedMatiere: any;
     anneeActive: any;
     closeFicheCotation: () => void;
+    promotionId: string;
 }
 
 const FicheCotation = ({
     selectedMatiere,
     anneeActive,
     closeFicheCotation,
+    promotionId
 }: FicheCotationProps) => {
-    const [etudiants, setEtudiants] = useState<Etudiant[]>([]);
+    const [etudiants, setEtudiants] = useState<ParcoursEtudiant[]>([]);
+    const [searchTerm, setSearchTerm] = useState<string>('');
     const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+    const fetchEtudiant = async () => {
+        try {
+            const req = await fetch(`/api/parcours?promotionId=${promotionId}&anneeId=${anneeActive._id}`);
+            const resp = await req.json();
+            console.log("Etudiants req : ", resp)
+            if(resp.success) {
+                // Trier les étudiants par ordre alphabétique (nom en priorité)
+                const etudiantsTries = resp.data.sort((a: ParcoursEtudiant, b: ParcoursEtudiant) => {
+                    const nomA = a.etudiantId.nom.toLowerCase();
+                    const nomB = b.etudiantId.nom.toLowerCase();
+                    if (nomA === nomB) {
+                        return a.etudiantId.prenom.toLowerCase().localeCompare(b.etudiantId.prenom.toLowerCase());
+                    }
+                    return nomA.localeCompare(nomB);
+                });
+                setEtudiants(etudiantsTries);
+            }
+        } catch (error) {
+            console.error('Erreur lors de la récupération des étudiants:', error);
+        }
+    };
 
     // Charger les étudiants au montage du composant
     useEffect(() => {
-        const etudiantsSimules: Etudiant[] = [
-            { _id: '1', nom: 'DUPONT', prenom: 'Jean', matricule: 'ET001' },
-            { _id: '2', nom: 'MARTIN', prenom: 'Marie', matricule: 'ET002' },
-            { _id: '3', nom: 'BERNARD', prenom: 'Pierre', matricule: 'ET003' },
-            { _id: '4', nom: 'THOMAS', prenom: 'Sophie', matricule: 'ET004' },
-            { _id: '5', nom: 'PETIT', prenom: 'Lucas', matricule: 'ET005' },
-        ];
-        setEtudiants(etudiantsSimules);
+        fetchEtudiant();
     }, [selectedMatiere]);
+
+    // Fonction pour obtenir les notes d'un étudiant pour la matière courante
+    const getNotesForMatiere = (etudiant: ParcoursEtudiant) => {
+        const noteMatiere = etudiant.notes?.find(note => note.matiereId === selectedMatiere._id);
+        return {
+            cmi: noteMatiere?.cmi || 0,
+            examen: noteMatiere?.examen || 0,
+            rattrapage: noteMatiere?.rattrapage || 0
+        };
+    };
+
+    // Fonction pour filtrer les étudiants selon le terme de recherche
+    const getFilteredEtudiants = () => {
+        if (!searchTerm.trim()) {
+            return etudiants;
+        }
+        
+        const term = searchTerm.toLowerCase();
+        return etudiants.filter(etudiant => 
+            etudiant.etudiantId.nom.toLowerCase().includes(term) ||
+            etudiant.etudiantId.prenom.toLowerCase().includes(term) ||
+            etudiant.etudiantId.matricule.toLowerCase().includes(term)
+        );
+    };
 
     const handleCSVImport = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -49,8 +96,8 @@ const FicheCotation = ({
 
             const updatedEtudiants = etudiants.map(etudiant => {
                 const dataLine = lines.find(line =>
-                    line.toLowerCase().includes(etudiant.matricule.toLowerCase()) ||
-                    line.toLowerCase().includes(etudiant.nom.toLowerCase())
+                    line.toLowerCase().includes(etudiant.etudiantId.matricule.toLowerCase()) ||
+                    line.toLowerCase().includes(etudiant.etudiantId.nom.toLowerCase())
                 );
 
                 if (dataLine) {
@@ -59,11 +106,26 @@ const FicheCotation = ({
                     const examenIndex = headers.findIndex(h => h.toLowerCase().includes('examen'));
                     const rattrapageIndex = headers.findIndex(h => h.toLowerCase().includes('rattrapage'));
 
+                    // Mettre à jour les notes dans le parcours
+                    const updatedNotes = etudiant.notes || [];
+                    const existingNoteIndex = updatedNotes.findIndex(note => note.matiereId === selectedMatiere._id);
+                    
+                    const newNote = {
+                        matiereId: selectedMatiere._id,
+                        cmi: cmiIndex >= 0 ? parseFloat(values[cmiIndex]) || 0 : getNotesForMatiere(etudiant).cmi,
+                        examen: examenIndex >= 0 ? parseFloat(values[examenIndex]) || 0 : getNotesForMatiere(etudiant).examen,
+                        rattrapage: rattrapageIndex >= 0 ? parseFloat(values[rattrapageIndex]) || 0 : getNotesForMatiere(etudiant).rattrapage,
+                    };
+
+                    if (existingNoteIndex >= 0) {
+                        updatedNotes[existingNoteIndex] = newNote;
+                    } else {
+                        updatedNotes.push(newNote);
+                    }
+
                     return {
                         ...etudiant,
-                        cmi: cmiIndex >= 0 ? parseFloat(values[cmiIndex]) || undefined : etudiant.cmi,
-                        examen: examenIndex >= 0 ? parseFloat(values[examenIndex]) || undefined : etudiant.examen,
-                        rattrapage: rattrapageIndex >= 0 ? parseFloat(values[rattrapageIndex]) || undefined : etudiant.rattrapage,
+                        notes: updatedNotes
                     };
                 }
                 return etudiant;
@@ -85,11 +147,32 @@ const FicheCotation = ({
             return;
         }
 
-        setEtudiants(prev => prev.map(etudiant =>
-            etudiant._id === etudiantId
-                ? { ...etudiant, [field]: numValue }
-                : etudiant
-        ));
+        setEtudiants(prev => prev.map(etudiant => {
+            if (etudiant._id === etudiantId) {
+                const updatedNotes = etudiant.notes || [];
+                const existingNoteIndex = updatedNotes.findIndex(note => note.matiereId === selectedMatiere._id);
+                
+                const currentNotes = getNotesForMatiere(etudiant);
+                const newNote = {
+                    matiereId: selectedMatiere._id,
+                    cmi: field === 'cmi' ? numValue : currentNotes.cmi,
+                    examen: field === 'examen' ? numValue : currentNotes.examen,
+                    rattrapage: field === 'rattrapage' ? numValue : currentNotes.rattrapage,
+                };
+
+                if (existingNoteIndex >= 0) {
+                    updatedNotes[existingNoteIndex] = newNote;
+                } else {
+                    updatedNotes.push(newNote);
+                }
+
+                return {
+                    ...etudiant,
+                    notes: updatedNotes
+                };
+            }
+            return etudiant;
+        }));
     };
 
     return (
@@ -117,18 +200,29 @@ const FicheCotation = ({
                     </button>
                 </div>
                 {/* Statistiques de la fiche */}
-                <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="mt-6 grid grid-cols-1 md:grid-cols-5 gap-4">
                     <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
                         <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                             {etudiants.length}
                         </div>
                         <div className="text-sm text-blue-600 dark:text-blue-400">
-                            Étudiants inscrits
+                            Total inscrits
+                        </div>
+                    </div>
+                    <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
+                        <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                            {getFilteredEtudiants().length}
+                        </div>
+                        <div className="text-sm text-purple-600 dark:text-purple-400">
+                            Affichés
                         </div>
                     </div>
                     <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
                         <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                            {etudiants.filter(e => e.cmi && e.examen && ((e.cmi + e.examen) / 2) >= 10).length}
+                            {getFilteredEtudiants().filter(e => {
+                                const notes = getNotesForMatiere(e);
+                                return notes.cmi && notes.examen && ((notes.cmi + notes.examen) / 2) >= 10;
+                            }).length}
                         </div>
                         <div className="text-sm text-green-600 dark:text-green-400">
                             Admis (≥10)
@@ -136,7 +230,10 @@ const FicheCotation = ({
                     </div>
                     <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4">
                         <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                            {etudiants.filter(e => e.cmi && e.examen && ((e.cmi + e.examen) / 2) < 10).length}
+                            {getFilteredEtudiants().filter(e => {
+                                const notes = getNotesForMatiere(e);
+                                return notes.cmi && notes.examen && ((notes.cmi + notes.examen) / 2) < 10;
+                            }).length}
                         </div>
                         <div className="text-sm text-orange-600 dark:text-orange-400">
                             En rattrapage
@@ -144,9 +241,20 @@ const FicheCotation = ({
                     </div>
                     <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                         <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">
-                            {etudiants.filter(e => e.cmi && e.examen).length > 0
-                                ? (etudiants.filter(e => e.cmi && e.examen).reduce((sum, e) => sum + ((e.cmi! + e.examen!) / 2), 0) / etudiants.filter(e => e.cmi && e.examen).length).toFixed(2)
-                                : '0.00'
+                            {(() => {
+                                const etudiantsAvecNotes = getFilteredEtudiants().filter(e => {
+                                    const notes = getNotesForMatiere(e);
+                                    return notes.cmi && notes.examen;
+                                });
+                                if (etudiantsAvecNotes.length > 0) {
+                                    const somme = etudiantsAvecNotes.reduce((sum, e) => {
+                                        const notes = getNotesForMatiere(e);
+                                        return sum + ((notes.cmi + notes.examen) / 2);
+                                    }, 0);
+                                    return (somme / etudiantsAvecNotes.length).toFixed(2);
+                                }
+                                return '0.00';
+                            })()
                             }
                         </div>
                         <div className="text-sm text-gray-600 dark:text-gray-400">
@@ -155,6 +263,26 @@ const FicheCotation = ({
                     </div>
                 </div>
 
+                {/* Barre de recherche */}
+                <div className="mb-6">
+                    <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span className="text-gray-400 text-sm">🔍</span>
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Rechercher un étudiant (nom, prénom, matricule)..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                    </div>
+                    {searchTerm && (
+                        <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                            {getFilteredEtudiants().length} étudiant(s) trouvé(s) sur {etudiants.length}
+                        </div>
+                    )}
+                </div>
 
                 {/* Actions d'import */}
                 <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -164,7 +292,7 @@ const FicheCotation = ({
                                 Import des notes
                             </h3>
                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Format CSV attendu: matricule, nom, cmi, examen, rattrapage
+                                Format CSV attendu: Matricule, Nom, Prenom, CMI(/10), Examen(/10), Rattrapage(/20)
                             </p>
                         </div>
                         <div className="flex space-x-2">
@@ -183,8 +311,16 @@ const FicheCotation = ({
                             </button>
                             <button
                                 onClick={() => {
-                                    const csvContent = "matricule,nom,prenom,cmi,examen,rattrapage\n" +
-                                        etudiants.map(e => `${e.matricule},${e.nom},${e.prenom},${e.cmi || ''},${e.examen || ''},${e.rattrapage || ''}`).join('\n');
+                                    const csvContent = "Matricule,Nom,Prenom,CMI(/10),Examen(/10),Rattrapage(/20),Moyenne\n" +
+                                        getFilteredEtudiants().map(e => {
+                                            const notes = getNotesForMatiere(e);
+                                            const moyenne = notes.cmi && notes.examen
+                                                ? ((notes.cmi + notes.examen) / 2).toFixed(2)
+                                                : notes.rattrapage
+                                                    ? (notes.rattrapage / 2).toFixed(2)
+                                                    : '0.00';
+                                            return `${e.etudiantId.matricule},${e.etudiantId.nom},${e.etudiantId.prenom},${notes.cmi || '0'},${notes.examen || '0'},${notes.rattrapage || '0'},${moyenne}`;
+                                        }).join('\n');
                                     const blob = new Blob([csvContent], { type: 'text/csv' });
                                     const url = window.URL.createObjectURL(blob);
                                     const a = document.createElement('a');
@@ -227,21 +363,22 @@ const FicheCotation = ({
                             </tr>
                         </thead>
                         <tbody>
-                            {etudiants.map((etudiant, index) => {
-                                const moyenne = etudiant.cmi && etudiant.examen
-                                    ? ((etudiant.cmi + etudiant.examen) / 2).toFixed(2)
-                                    : etudiant.rattrapage
-                                        ? (etudiant.rattrapage / 2).toFixed(2)
-                                        : '-';
+                            {getFilteredEtudiants().map((etudiant, index) => {
+                                const notes = getNotesForMatiere(etudiant);
+                                const moyenne = notes.cmi && notes.examen
+                                    ? ((notes.cmi + notes.examen) / 2).toFixed(2)
+                                    : notes.rattrapage
+                                        ? (notes.rattrapage / 2).toFixed(2)
+                                        : '0.00';
 
                                 return (
                                     <tr key={etudiant._id} className={index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-750'}>
                                         <td className="border border-gray-300 dark:border-gray-600 px-4 py-3 font-mono text-sm">
-                                            {etudiant.matricule}
+                                            {etudiant.etudiantId.matricule}
                                         </td>
                                         <td className="border border-gray-300 dark:border-gray-600 px-4 py-3">
                                             <div className="font-medium text-gray-900 dark:text-white">
-                                                {etudiant.nom} {etudiant.prenom}
+                                                {etudiant.etudiantId.nom} {etudiant.etudiantId.prenom}
                                             </div>
                                         </td>
                                         <td className="border border-gray-300 dark:border-gray-600 px-4 py-3 text-center">
@@ -250,7 +387,7 @@ const FicheCotation = ({
                                                 min="0"
                                                 max="10"
                                                 step="0.25"
-                                                value={etudiant.cmi || ''}
+                                                value={notes.cmi || ''}
                                                 onChange={(e) => handleNoteChange(etudiant._id, 'cmi', e.target.value)}
                                                 className="w-20 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                 placeholder="0.00"
@@ -262,7 +399,7 @@ const FicheCotation = ({
                                                 min="0"
                                                 max="10"
                                                 step="0.25"
-                                                value={etudiant.examen || ''}
+                                                value={notes.examen || ''}
                                                 onChange={(e) => handleNoteChange(etudiant._id, 'examen', e.target.value)}
                                                 className="w-20 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                 placeholder="0.00"
@@ -274,7 +411,7 @@ const FicheCotation = ({
                                                 min="0"
                                                 max="20"
                                                 step="0.25"
-                                                value={etudiant.rattrapage || ''}
+                                                value={notes.rattrapage || ''}
                                                 onChange={(e) => handleNoteChange(etudiant._id, 'rattrapage', e.target.value)}
                                                 className="w-20 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                 placeholder="0.00"

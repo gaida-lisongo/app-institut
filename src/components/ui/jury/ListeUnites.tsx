@@ -61,6 +61,7 @@ const ListeUnites = () => {
                 selectedMatiere={selectedMatiere}
                 anneeActive={anneeActive}
                 closeFicheCotation={closeFicheCotation}
+                promotionId={selectedPromotion?._id ?? ''}
             />
         );
     }
