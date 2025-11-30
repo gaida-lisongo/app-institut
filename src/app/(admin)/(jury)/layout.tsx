@@ -1,78 +1,92 @@
 import NavigationJury from "@/components/ui/jury/NavigationJury";
+import { PromotionProvider } from "@/contexts/PromotionContext";
 import dbConnect from "@/lib/dbConnect";
-import Annee from "@/models/Annee";
-import { cookies, headers } from "next/headers";
+import AnneeModel from "@/models/Annee";
+import { cookies } from "next/headers";
+import { JWTUtils } from '@/lib/auth/jwt';
+import { JuryAnnee, JuryPromotion, Filiere } from "@/types/jury";
 
-const fetchAnnees = async () => {
+const fetchAnnees = async (): Promise<JuryAnnee[]> => {
     try {
         await dbConnect();
 
-        const anneesData = await Annee.find({}).lean();
+        const anneesData = await AnneeModel.find({}).lean();
 
         if(!anneesData){
             return [];
         }
 
-        return anneesData;
+        // Convertir en objets plain JavaScript pour éviter l'erreur de sérialisation
+        return anneesData.map((annee: any) => ({
+            _id: annee._id.toString(),
+            debut: annee.debut,
+            fin: annee.fin,
+            isActive: annee.isActive,
+            createdAt: annee.createdAt.toISOString(),
+            updatedAt: annee.updatedAt.toISOString()
+        }));
     } catch (error) {
         console.error("Error fetching annees : ", error);
         return [];
     }
 }
-// Fonction pour récupérer les autorisations depuis les cookies/session
-const getUserAuthorizations = async () => {
+// Fonction pour récupérer les filières de l'utilisateur
+const getUserFilieres = async (): Promise<Filiere[]> => {
     try {
-        // Méthode compatible avec Next.js 15+
         const cookieStore = await cookies();
+        const tokenCookie = cookieStore.get('auth-token');
         
-        // Option 1: Récupérer depuis un cookie userData
-        const userDataCookie = cookieStore.get('userData');
-        if (userDataCookie) {
-            const userData = JSON.parse(userDataCookie.value);
-            return userData.autorisations || [];
-        }
-
-        // Option 2: Récupérer depuis un token JWT dans les cookies
-        const tokenCookie = cookieStore.get('authToken');
         if (tokenCookie) {
-            // Vous pouvez décoder le JWT ici pour extraire les autorisations
-            // const jwt = require('jsonwebtoken');
-            // const decoded = jwt.verify(tokenCookie.value, process.env.JWT_SECRET);
-            // return decoded.autorisations || [];
-        }
+            const { userId } = JWTUtils.verifyToken(tokenCookie.value);
 
-        // Option 3: Récupérer depuis les headers
-        const headersList = await headers();
-        const authHeader = headersList.get('authorization');
-        if (authHeader) {
-            // Traiter le header d'autorisation si nécessaire
-            // return extractAuthorizationsFromHeader(authHeader);
+            const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+            const url = `${baseUrl}/api/jurys?userId=${userId}`;
+            
+            const req = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${tokenCookie.value}`
+                }
+            });
+            const res = await req.json();
+
+            if(!res?.success){
+                return [];
+            }
+
+            // Sérialiser les données pour éviter les erreurs
+            return JSON.parse(JSON.stringify(res.data));
         }
 
         return [];
     } catch (error) {
-        console.error("Error fetching user authorizations:", error);
+        console.error("Error fetching user filieres:", error);
         return [];
     }
 };
 
 const JuryLayout = async ({children}: {children: React.ReactNode}) => {
     const annees = await fetchAnnees();
+    const filieres = await getUserFilieres();
     
-    // Récupérer les autorisations de l'utilisateur
-    const autorisations = await getUserAuthorizations();
-    
-    console.log("Data fetching annee:", annees);
-    console.log("User autorisations:", autorisations);
+    // Extraire toutes les promotions des filières
+    const promotions: JuryPromotion[] = [];
+    filieres.forEach(filiere => {
+        promotions.push(...filiere.promotions);
+    });
 
     return (
-        <div>
-            <NavigationJury 
-                annees={annees} 
-                autorisations={autorisations} 
-            />
-            {children}
-        </div>
+        <PromotionProvider 
+            initialAnnees={annees}
+            initialPromotions={promotions}
+            initialFilieres={filieres}
+        >
+            <div>
+                <NavigationJury />
+                {children}
+            </div>
+        </PromotionProvider>
     );
 };
 
