@@ -12,7 +12,7 @@ export interface Matiere {
   _id: string;
   designation: string;
   code: string;
-  credit: number;
+  credits: number;
   coefficient: number;
 }
 
@@ -20,7 +20,7 @@ export interface Unite {
   _id: string;
   designation: string;
   code: string;
-  credit: number;
+  credits: number;
   matieres: Matiere[];
 }
 
