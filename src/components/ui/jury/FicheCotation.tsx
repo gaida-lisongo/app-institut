@@ -159,11 +159,22 @@ const FicheCotation = ({
             const nomIndex = findColumnIndex(headers, 'nom');
 
             const updatedEtudiants = etudiants.map(etudiant => {
-                // Chercher l'étudiant dans le CSV
-                const studentRow = rows.find(row => 
-                    (matriculeIndex >= 0 && row[matriculeIndex]?.toLowerCase().includes(etudiant.etudiantId.matricule.toLowerCase())) ||
-                    (nomIndex >= 0 && row[nomIndex]?.toLowerCase().includes(etudiant.etudiantId.nom.toLowerCase()))
-                );
+                // Chercher l'étudiant dans le CSV par matricule UNIQUEMENT (plus sûr)
+                let studentRow = null;
+                
+                if (matriculeIndex >= 0) {
+                    // Priorité au matricule (correspondance exacte)
+                    studentRow = rows.find(row => 
+                        row[matriculeIndex]?.trim().toLowerCase() === etudiant.etudiantId.matricule.trim().toLowerCase()
+                    );
+                }
+                
+                // Si pas trouvé par matricule, essayer par nom (correspondance exacte aussi)
+                if (!studentRow && nomIndex >= 0) {
+                    studentRow = rows.find(row => 
+                        row[nomIndex]?.trim().toLowerCase() === etudiant.etudiantId.nom.trim().toLowerCase()
+                    );
+                }
 
                 if (studentRow) {
                     // Mettre à jour les notes dans le parcours
@@ -191,8 +202,19 @@ const FicheCotation = ({
                 return etudiant;
             });
 
+            // Compter les étudiants mis à jour
+            const etudiantsModifies = updatedEtudiants.filter((etudiant, index) => {
+                const originalEtudiant = etudiants[index];
+                const originalNotes = getNotesForMatiere(originalEtudiant);
+                const newNotes = getNotesForMatiere(etudiant);
+                
+                return originalNotes.cmi !== newNotes.cmi || 
+                       originalNotes.examen !== newNotes.examen || 
+                       originalNotes.rattrapage !== newNotes.rattrapage;
+            });
+
             setEtudiants(updatedEtudiants);
-            alert('Notes importées avec succès !');
+            alert(`Notes importées avec succès !\n${etudiantsModifies.length} étudiant(s) mis à jour sur ${etudiants.length} total.`);
         };
 
         reader.readAsText(file);
@@ -405,11 +427,11 @@ const FicheCotation = ({
                 />
 
                 {/* Actions Import/Export */}
-                <ImportExportActions 
+                {fileInputRef?.current && <ImportExportActions 
                     onImport={handleCSVImport}
                     onExport={handleCSVExport}
                     fileInputRef={fileInputRef}
-                />
+                />}
 
                 {/* Liste des étudiants */}
                 <div className={height}>

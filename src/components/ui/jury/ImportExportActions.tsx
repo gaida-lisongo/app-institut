@@ -4,7 +4,7 @@ import React from 'react';
 interface ImportExportActionsProps {
     onImport: (event: React.ChangeEvent<HTMLInputElement>) => void;
     onExport: () => void;
-    fileInputRef: React.RefObject<HTMLInputElement>;
+    fileInputRef: React.RefObject<HTMLInputElement> | null;
 }
 
 const ImportExportActions = ({ onImport, onExport, fileInputRef }: ImportExportActionsProps) => {
@@ -32,7 +32,7 @@ const ImportExportActions = ({ onImport, onExport, fileInputRef }: ImportExportA
                         className="hidden"
                     />
                     <button
-                        onClick={() => fileInputRef.current?.click()}
+                        onClick={() => fileInputRef?.current?.click()}
                         className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg flex items-center space-x-2"
                     >
                         <span>📁</span>
