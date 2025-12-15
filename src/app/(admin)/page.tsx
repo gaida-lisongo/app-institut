@@ -25,13 +25,13 @@ export default function Ecommerce() {
         <UserProfile />
       </div>
       <div className="col-span-12 space-y-6 xl:col-span-7">
-        {/* <EcommerceMetrics /> */}
+        <EcommerceMetrics />
 
-        {/* <MonthlySalesChart /> */}
+        <MonthlySalesChart />
       </div>
 
       <div className="col-span-12 xl:col-span-5">
-        {/* <MonthlyTarget /> */}
+        <MonthlyTarget />
       </div>
 
       <div className="col-span-12">
@@ -39,7 +39,7 @@ export default function Ecommerce() {
       </div>
 
       <div className="col-span-12 xl:col-span-5">
-        {/* <DemographicCard /> */}
+        <DemographicCard />
       </div>
 
       <div className="col-span-12 xl:col-span-7">

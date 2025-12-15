@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import BulkInscriptionModal from '@/components/inscriptions/BulkInscriptionModal';
 import AccessCard from '@/utils/AccessCard';
+import UpdateParcoursStatusCsv from '@/components/csv/UpdateParcoursStatusCsv';
 
 // Types
 export interface Promotion {
@@ -459,14 +460,19 @@ export default function InscriptionsCyclePage() {
                 </p>
               </div>
             </div>
-            
-            <button
-              onClick={() => printCardAccess(currentPromotion as Promotion)}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-            >
-              <UsersIcon className="h-5 w-5 mr-2" />
-              Cartes d'accès
-            </button>
+
+            <div className="flex space-x-4">            
+              <UpdateParcoursStatusCsv promotionId={currentPromotion?._id as string} />
+              
+              <button
+                onClick={() => printCardAccess(currentPromotion as Promotion)}
+                className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+              >
+                <UsersIcon className="h-5 w-5 mr-2" />
+                Cartes d'accès
+              </button>
+              
+            </div>
           </div>
 
           {/* Statistiques des inscriptions */}
