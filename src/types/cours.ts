@@ -7,7 +7,7 @@ export interface Unite {
   descriptions?: string;
   credits: number;
   filiereId: string;
-  matieres: string[];
+  matieres: Matiere[];
   createdAt: string;
   updatedAt: string;
 }

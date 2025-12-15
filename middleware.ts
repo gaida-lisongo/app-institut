@@ -4,6 +4,18 @@ import { AuthMiddleware } from '@/lib/middlewares/authMiddleware';
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
+  // Gérer les requêtes OPTIONS (CORS preflight)
+  if (request.method === 'OPTIONS') {
+    return new NextResponse(null, {
+      status: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
+      },
+    });
+  }
+
   // Exclure les pages de login et auth
   const isAuthPage = pathname.includes('/signin') || 
                      pathname.includes('/signup') ||

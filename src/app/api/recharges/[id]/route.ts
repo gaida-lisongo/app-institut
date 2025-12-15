@@ -206,6 +206,8 @@ export async function DELETE(
 ) {
   try {
     await dbConnect();
+
+    console.log("payment id :", params);
     
     const { id } = params;
     
@@ -214,7 +216,8 @@ export async function DELETE(
       return NextResponse.json(
         { 
           success: false, 
-          error: 'ID recharge invalide' 
+          error: 'ID recharge invalide',
+          data: request
         },
         { status: 400 }
       );

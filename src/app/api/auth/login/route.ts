@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       role: 'agent'
     };
     console.log('POST /api/auth/login - Génération token pour:', tokenPayload);
-    const token = JWTUtils.generateToken(tokenPayload);
+    const token = await JWTUtils.generateToken(tokenPayload);
     console.log('- Token généré:', token ? 'succès' : 'échec');
 
     // Créer la réponse avec le token dans un cookie
@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('- Tentative de vérification du token...');
-    const payload = JWTUtils.verifyToken(token);
+    const payload = await JWTUtils.verifyToken(token);
     console.log('- Token vérifié avec succès:', payload.userId);
     
     return NextResponse.json(

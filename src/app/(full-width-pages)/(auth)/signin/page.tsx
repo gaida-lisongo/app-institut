@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeftIcon } from '@/icons';
 import Link from 'next/link';
+import ChevronLeftIcon from '@/icons/chevron-left.svg';
 import { useAuthenticateAgent, useCheckAuth, useAuthLoading, useAuthError, useIsAuthenticated } from '@/store/useUserStore';
 
 export default function LoginPage() {
@@ -56,7 +56,7 @@ export default function LoginPage() {
           href="/"
           className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
-          <ChevronLeftIcon />
+                    <ChevronLeftIcon />
           Retour à l'accueil
         </Link>
       </div>

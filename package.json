@@ -28,7 +28,7 @@
     "flatpickr": "^4.6.13",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^9.0.0",
-    "next": "15.2.3",
+    "next": "^15.3.6",
     "pdfmake": "^0.2.20",
     "qrcode": "^1.5.4",
     "react": "^19.0.0",

@@ -4,19 +4,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
-import {
-  BoxCubeIcon,
-  CalenderIcon,
-  ChevronDownIcon,
-  GridIcon,
-  HorizontaLDots,
-  ListIcon,
-  PageIcon,
-  PieChartIcon,
-  PlugInIcon,
-  TableIcon,
-  UserCircleIcon,
-} from "../icons/index";
+import BoxCubeIcon from "../icons/box-cube.svg";
+import CalenderIcon from "../icons/calender-line.svg";
+import ChevronDownIcon from "../icons/chevron-down.svg";
+import GridIcon from "../icons/grid.svg";
+import HorizontaLDots from "../icons/horizontal-dots.svg";
+import ListIcon from "../icons/list.svg";
+import PageIcon from "../icons/page.svg";
+import PieChartIcon from "../icons/pie-chart.svg";
+import PlugInIcon from "../icons/plug-in.svg";
+import TableIcon from "../icons/table.svg";
+import UserCircleIcon from "../icons/user-circle.svg";
 import SidebarWidget from "./SidebarWidget";
 import { useAutorisations } from "@/store/useUserStore";
 
@@ -447,10 +445,6 @@ const AppSidebar: React.FC = () => {
                   {
                     name: "Palmarèsse",
                     path: "/deliberations/palmaresse",
-                  },
-                  {
-                    name: "Bulletin",
-                    path: "/deliberations/bulletin",
                   }
                 ]
               }
@@ -572,10 +566,15 @@ const AppSidebar: React.FC = () => {
                 path: "/",
               }
             ], "")}
-            {menu ? 
-                menu.map(item => renderMenu(item?.menuType, item?.menuItems, item?.menuLabel))
-                : null
-            }
+            {menu && menu.length > 0 ? (
+              <>
+                {menu.map((item, idx) => (
+                  <div key={`${item?.menuType}-${idx}`}>
+                    {renderMenu(item?.menuType, item?.menuItems, item?.menuLabel)}
+                  </div>
+                ))}
+              </>
+            ) : null}
             {renderMenu("others", othersItems, "Others")}
             {renderMenu("users", usersMenuItems, "Utilisateurs")}
           </div>

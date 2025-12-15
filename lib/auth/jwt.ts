@@ -1,5 +1,3 @@
-import crypto from 'crypto';
-
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
 const JWT_EXPIRES_IN = 7 * 24 * 60 * 60 * 1000; // 7 jours en millisecondes
 
@@ -11,9 +9,32 @@ export interface TokenPayload {
   exp?: number;
 }
 
+// Utiliser Web Crypto API pour la compatibilité Edge Runtime
+async function getSignature(message: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(JWT_SECRET),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  
+  const signature = await crypto.subtle.sign(
+    'HMAC',
+    key,
+    encoder.encode(message)
+  );
+  
+  // Convertir en hex
+  return Array.from(new Uint8Array(signature))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 export class JWTUtils {
   // Génération d'un token simple (remplacer par JWT en production)
-  static generateToken(payload: Omit<TokenPayload, 'iat' | 'exp'>): string {
+  static async generateToken(payload: Omit<TokenPayload, 'iat' | 'exp'>): Promise<string> {
     const now = Date.now();
     const tokenData = {
       ...payload,
@@ -22,19 +43,18 @@ export class JWTUtils {
     };
     
     const tokenString = JSON.stringify(tokenData);
-    const signature = crypto
-      .createHmac('sha256', JWT_SECRET)
-      .update(tokenString)
-      .digest('hex');
+    const signature = await getSignature(tokenString);
     
     // Utiliser un séparateur différent du point pour éviter les conflits
     const combined = `${tokenString}|||${signature}`;
-    return Buffer.from(combined).toString('base64');
+    const encoder = new TextEncoder();
+    const buffer = encoder.encode(combined);
+    return btoa(String.fromCharCode.apply(null, Array.from(buffer)));
   }
 
-  static verifyToken(token: string): TokenPayload {
+  static async verifyToken(token: string): Promise<TokenPayload> {
     try {
-      const decoded = Buffer.from(token, 'base64').toString();
+      const decoded = atob(token);
       const parts = decoded.split('|||');
       
       if (parts.length !== 2) {
@@ -44,10 +64,7 @@ export class JWTUtils {
       const [tokenString, signature] = parts;
       
       // Vérifier la signature
-      const expectedSignature = crypto
-        .createHmac('sha256', JWT_SECRET)
-        .update(tokenString)
-        .digest('hex');
+      const expectedSignature = await getSignature(tokenString);
       
       if (signature !== expectedSignature) {
         throw new Error('Signature invalide');
@@ -68,7 +85,7 @@ export class JWTUtils {
 
   static decodeToken(token: string): TokenPayload | null {
     try {
-      const decoded = Buffer.from(token, 'base64').toString();
+      const decoded = atob(token);
       const [tokenString] = decoded.split('|||');
       return JSON.parse(tokenString) as TokenPayload;
     } catch (error) {

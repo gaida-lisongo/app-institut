@@ -24,7 +24,7 @@ export function withAuth(
       }
 
       // Vérifier le token
-      const payload = JWTUtils.verifyToken(token);
+      const payload = await JWTUtils.verifyToken(token);
       
       // Ajouter les informations utilisateur à la requête
       const authenticatedRequest = request as AuthenticatedRequest;

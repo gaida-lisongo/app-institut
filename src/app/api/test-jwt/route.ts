@@ -13,12 +13,12 @@ export async function GET(request: NextRequest) {
     };
     
     console.log('1. Payload de test:', testPayload);
-    const token = JWTUtils.generateToken(testPayload);
+    const token = await JWTUtils.generateToken(testPayload);
     console.log('2. Token généré:', token);
     
     // Test de vérification
     try {
-      const verified = JWTUtils.verifyToken(token);
+      const verified = await JWTUtils.verifyToken(token);
       console.log('3. Token vérifié:', verified);
       
       return NextResponse.json({

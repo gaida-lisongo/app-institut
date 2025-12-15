@@ -28,7 +28,7 @@ export class AuthMiddleware {
         );
       }
 
-      const payload = JWTUtils.verifyToken(token);
+      const payload = await JWTUtils.verifyToken(token);
       
       // Ajouter les informations utilisateur à la requête
       // Note: NextRequest n'est pas extensible, on utilisera les headers
@@ -62,7 +62,7 @@ export class AuthMiddleware {
         return NextResponse.redirect(new URL('/signin', request.url));
       }
 
-      const payload = JWTUtils.verifyToken(token);
+      const payload = await JWTUtils.verifyToken(token);
       
       // Vérifier les permissions si nécessaire
       // if (payload.role !== 'admin') {

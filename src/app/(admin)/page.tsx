@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { EcommerceMetrics } from "@/components/ecommerce/EcommerceMetrics";
+// import { EcommerceMetrics } from "@/components/ecommerce/EcommerceMetrics";
 import React from "react";
 import MonthlyTarget from "@/components/ecommerce/MonthlyTarget";
 import MonthlySalesChart from "@/components/ecommerce/MonthlySalesChart";
@@ -8,6 +8,7 @@ import RecentOrders from "@/components/ecommerce/RecentOrders";
 import DemographicCard from "@/components/ecommerce/DemographicCard";
 import AuthStatus from "@/components/auth/AuthStatus";
 import UserProfile from "@/components/user/UserProfile";
+import EcommerceMetrics from "@/components/ecommerce/EcommerceMetrics";
 
 export const metadata: Metadata = {
   title: "Dashboard Admin | Système de Gestion",
@@ -24,13 +25,13 @@ export default function Ecommerce() {
         <UserProfile />
       </div>
       <div className="col-span-12 space-y-6 xl:col-span-7">
-        <EcommerceMetrics />
+        {/* <EcommerceMetrics /> */}
 
-        <MonthlySalesChart />
+        {/* <MonthlySalesChart /> */}
       </div>
 
       <div className="col-span-12 xl:col-span-5">
-        <MonthlyTarget />
+        {/* <MonthlyTarget /> */}
       </div>
 
       <div className="col-span-12">
@@ -38,7 +39,7 @@ export default function Ecommerce() {
       </div>
 
       <div className="col-span-12 xl:col-span-5">
-        <DemographicCard />
+        {/* <DemographicCard /> */}
       </div>
 
       <div className="col-span-12 xl:col-span-7">

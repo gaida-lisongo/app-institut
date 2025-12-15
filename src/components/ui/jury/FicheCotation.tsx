@@ -9,18 +9,21 @@ import EtudiantCard from './EtudiantCard';
 import ProgressBar from './ProgressBar';
 import { parseCSV, generateCSV, findColumnIndex, findRowByValue, validateNotesCSVFormat } from '@/utils/csvUtils';
 
-interface ParcoursEtudiant {
+export interface NoteMatiere {
+    _id?: string;
+    matiereId: string;
+    cmi?: number;
+    examen?: number;
+    rattrapage?: number;
+}
+
+export interface ParcoursEtudiant {
     _id: string;
     etudiantId: Etudiant;
     anneeId: Annee;
     promotionId: Promotion;
     statut: string;
-    notes?: {
-        matiereId: string;
-        cmi?: number;
-        examen?: number;
-        rattrapage?: number;
-    }[]
+    notes?: NoteMatiere[]
 }
 
 interface FicheCotationProps {

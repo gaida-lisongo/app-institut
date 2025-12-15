@@ -10,6 +10,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    
     await dbConnect();
     
     // S'assurer que tous les modèles sont enregistrés
