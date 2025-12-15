@@ -37,7 +37,10 @@ const getUserFilieres = async (): Promise<Filiere[]> => {
         const tokenCookie = cookieStore.get('auth-token');
         
         if (tokenCookie) {
-            const { userId } = JWTUtils.verifyToken(tokenCookie.value);
+
+            console.log("tokenCookie", tokenCookie);
+            const { userId } = await JWTUtils.verifyToken(tokenCookie.value);
+            console.log("userId", userId);
 
             const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
             const url = `${baseUrl}/api/jurys?userId=${userId}`;
@@ -69,6 +72,9 @@ const getUserFilieres = async (): Promise<Filiere[]> => {
 const JuryLayout = async ({children}: {children: React.ReactNode}) => {
     const annees = await fetchAnnees();
     const filieres = await getUserFilieres();
+
+    console.log("annees", annees);
+    console.log("filieres", filieres);
     
     // Extraire toutes les promotions des filières
     const promotions: JuryPromotion[] = [];
