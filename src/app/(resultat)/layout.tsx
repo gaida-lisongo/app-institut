@@ -44,7 +44,7 @@ interface Matiere {
   credits: number;
 }
 
-interface Promotion {
+export interface Promotion {
   _id: string;
   designation: string;
   systeme: string;
