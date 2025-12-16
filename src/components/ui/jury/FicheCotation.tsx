@@ -430,11 +430,11 @@ const FicheCotation = ({
                 />
 
                 {/* Actions Import/Export */}
-                {fileInputRef?.current && <ImportExportActions 
+                <ImportExportActions 
                     onImport={handleCSVImport}
                     onExport={handleCSVExport}
                     fileInputRef={fileInputRef}
-                />}
+                />
 
                 {/* Liste des étudiants */}
                 <div className={height}>

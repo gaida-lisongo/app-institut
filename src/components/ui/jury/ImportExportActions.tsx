@@ -4,7 +4,7 @@ import React from 'react';
 interface ImportExportActionsProps {
     onImport: (event: React.ChangeEvent<HTMLInputElement>) => void;
     onExport: () => void;
-    fileInputRef: React.RefObject<HTMLInputElement> | null;
+    fileInputRef: React.RefObject<HTMLInputElement | null> | null;
 }
 
 const ImportExportActions = ({ onImport, onExport, fileInputRef }: ImportExportActionsProps) => {
