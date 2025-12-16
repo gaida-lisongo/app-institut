@@ -3,6 +3,8 @@ import CommandesTable from "@/components/ecommerce/CommandesTable";
 import RechargesMetrics from "@/components/ecommerce/RechargesMetrics";
 import { headers } from "next/headers";
 import RechargesTarget from "@/components/ecommerce/RechargesTarget";
+import CommandesDashboardView from "@/components/ecommerce/CommandesDashboard";
+import CommandeDataTable from "@/components/ecommerce/CommandesDashboard";
 
 
 export const getJson = async (path: string) => {
@@ -50,7 +52,8 @@ const RechargesPage = async () => {
         <RechargesTarget promotions={promotions} annees={anneesResp.data} recharges={recharges} />
       </div>
       <div className="col-span-12 xl:col-span-12">
-        <CommandesTable data={commandesByPromotion} />
+        <CommandeDataTable commandes={commandesByPromotion.map(p => p.commandes).flat()} />
+        {/* <CommandesTable data={commandesByPromotion} /> */}
       </div>
     </div>
   );
