@@ -97,7 +97,29 @@ const ResultatActions = ({ promotionInfo }: { promotionInfo: Promotion }) => {
             
             if (result.success) {
                 updateSolde(currentBalance - cost);
-                return true;
+                const reqCommande = await fetch('/api/commande/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        etudiantId: etudiantInfo?._id,
+                        promotionId: promotionInfo?._id,
+                        anneeId: parcours?.anneeId?._id,
+                        montant: cost,
+                        produit: 'Bulletin',
+                        statut: 'Terminé'
+                    })
+                });
+
+                const resultCommande = await reqCommande.json();
+                console.log("Commande created : ", resultCommande);
+
+                if(resultCommande?.success){
+                    return true;
+                } else {
+                    return false;
+                }
             } else {
                 alert('Erreur lors de la déduction du solde: ' + result.error);
                 return false;
