@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
 import Recharge from '@/models/Recharge';
+import '@/models/Etudiant';
 
 // GET - Récupérer toutes les recharges ou rechercher
 export async function GET(request: NextRequest) {
@@ -10,7 +11,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search');
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') ||  '0');
+    const limit = parseInt(searchParams.get('limit') || '10');
     const status = searchParams.get('status');
     const currency = searchParams.get('currency');
     const etudiantId = searchParams.get('etudiantId');
@@ -74,7 +75,7 @@ export async function GET(request: NextRequest) {
     // Exécution de la requête avec pagination
     const [recharges, total] = await Promise.all([
       Recharge.find(query)
-        .populate('etudiantId', 'nom post_nom prenom matricule')
+        .populate('etudiantId')
         .sort(sortOptions)
         .skip(skip)
         .lean(),

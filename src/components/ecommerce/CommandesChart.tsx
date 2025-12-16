@@ -48,7 +48,7 @@ export default function CommandesChart({ commandes }: CommandesChartProps) {
 
   useEffect(() => {
     if (commandes && commandes.length > 0) {
-      const categories = commandes.map(promo => promo.designation);
+      const categories = commandes.map(promo => `${promo.niveau} ${(promo?.designation?.toString().split(' ')?.length > 2 ? promo?.designation?.toString().split(' ')[2].toString().slice(0, 3).toUpperCase() :  promo?.designation?.toString().split(' ')[1]) ?? promo?.designation?.toString().split('-')[1]}`);
       const seriesData = commandes.map(promo => {
         return promo.commandes.filter(cmd => {
           if (categorie === 'Bulletin') {

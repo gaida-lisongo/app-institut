@@ -1,5 +1,6 @@
 import { Model, Document } from 'mongoose';
 import { Mention, Filiere, Promotion, Section } from '@/models/Mention';
+import '@/models/Semestre';
 
 // Interface générique pour les contrôleurs CRUD
 interface CrudController<T extends Document> {

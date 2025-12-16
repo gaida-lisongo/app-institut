@@ -5,16 +5,16 @@ export interface ICommande extends Document {
     etudiantId: mongoose.Types.ObjectId;
     promotionId: mongoose.Types.ObjectId;
     anneeId: mongoose.Types.ObjectId;
-    montant: number;
-    produit: string;
-    statut: string
+    montant: Number;
+    produit: String;
+    statut: String
 }
 
 const CommandeSchema = new Schema<ICommande>({
     etudiantId: { type: Schema.Types.ObjectId, ref: 'Etudiant', required: true },
     promotionId: { type: Schema.Types.ObjectId, ref: 'Promotion', required: true },
     anneeId: { type: Schema.Types.ObjectId, ref: 'Annee', required: true },
-    produit: string,
+    produit: String,
     montant: Number,
     statut: { type: String, enum: ['En cours', 'Terminé', 'Annulé'], default: 'En cours' },
 })

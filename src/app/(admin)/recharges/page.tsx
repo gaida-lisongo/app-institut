@@ -19,9 +19,10 @@ const RechargesPage = async () => {
     return res.json();
   };
 
-  const [promotionsResp, rechargesResp] = await Promise.all([
+  const [promotionsResp, rechargesResp, anneesResp] = await Promise.all([
     getJson("/api/promotions"),
     getJson("/api/recharges"),
+    getJson("/api/annees"),
   ]);
 
   const promotions: any[] = promotionsResp?.success ? promotionsResp.data ?? [] : [];
@@ -37,9 +38,10 @@ const RechargesPage = async () => {
     }),
   );
 
-  // console.log("recharges : ", recharges);
+  console.log("recharges : ", recharges);
   console.log("promotions : ", promotions);
-  // console.log("commandes : ", commandesByPromotion);
+  console.log("commandes : ", commandesByPromotion);
+  console.log("annees : ", anneesResp);
 
   return (
     <div className="grid grid-cols-12 gap-4 md:gap-6">
