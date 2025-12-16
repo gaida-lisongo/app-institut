@@ -58,6 +58,7 @@ interface Annee {
   debut: string;
   fin: string;
   statut: string;
+  isActive: boolean;
 }
 
 interface Parcours {

@@ -54,7 +54,6 @@ export async function GET(request: NextRequest) {
         .populate('anneeId')
         .sort(sortOptions)
         .skip(skip)
-        .limit(limit)
         .lean(),
       Parcours.countDocuments(query)
     ]);

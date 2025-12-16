@@ -7,7 +7,7 @@ import RechargeCard from "./RechargeCard";
 
 export interface Recharge {
     _id: string;
-    etudiantId: string;
+    etudiantId: any;
     amount: number;
     currency: string;
     phone: string;
