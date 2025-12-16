@@ -14,6 +14,7 @@ const CommandeSchema = new Schema<ICommande>({
     etudiantId: { type: Schema.Types.ObjectId, ref: 'Etudiant', required: true },
     promotionId: { type: Schema.Types.ObjectId, ref: 'Promotion', required: true },
     anneeId: { type: Schema.Types.ObjectId, ref: 'Annee', required: true },
+    produit: string,
     montant: Number,
     statut: { type: String, enum: ['En cours', 'Terminé', 'Annulé'], default: 'En cours' },
 })

@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search');
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const limit = parseInt(searchParams.get('limit') ||  '0');
     const status = searchParams.get('status');
     const currency = searchParams.get('currency');
     const etudiantId = searchParams.get('etudiantId');
@@ -77,7 +77,6 @@ export async function GET(request: NextRequest) {
         .populate('etudiantId', 'nom post_nom prenom matricule')
         .sort(sortOptions)
         .skip(skip)
-        .limit(limit)
         .lean(),
       Recharge.countDocuments(query)
     ]);

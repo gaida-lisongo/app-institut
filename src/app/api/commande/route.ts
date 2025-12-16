@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       query.anneeId = anneeId
     }
 
-    const commandes = await Commandes.find()
+    const commandes = await Commandes.find(query)
         .populate('etudiantId')
         .populate('promotionId')
         .populate('anneeId')
