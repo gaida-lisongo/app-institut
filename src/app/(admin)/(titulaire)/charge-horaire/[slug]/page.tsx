@@ -78,10 +78,11 @@ const DashboardCharge = () => {
                         Retour au tableau de bord
                     </button>
                     <FicheCotation
-                        selectedMatiere={charge?.cours?._id}
+                        selectedMatiere={charge?.cours}
                         anneeActive={charge?.anneeId}
                         closeFicheCotation={() => setShowFicheCotation(false)}
                         promotionId={charge?.promotionId}
+                        initialEtudiants={etudiants}
                     />
                 </div>
             </div>

@@ -31,13 +31,15 @@ interface FicheCotationProps {
     anneeActive: any;
     closeFicheCotation: () => void;
     promotionId: string;
+    initialEtudiants?: ParcoursEtudiant[];
 }
 
 const FicheCotation = ({
     selectedMatiere,
     anneeActive,
     closeFicheCotation,
-    promotionId
+    promotionId,
+    initialEtudiants
 }: FicheCotationProps) => {
     const [etudiants, setEtudiants] = useState<ParcoursEtudiant[]>([]);
     const [searchTerm, setSearchTerm] = useState<string>('');
@@ -73,8 +75,23 @@ const FicheCotation = ({
 
     // Charger les étudiants au montage du composant
     useEffect(() => {
-        fetchEtudiant();
-    }, [selectedMatiere]);
+        if (initialEtudiants && initialEtudiants.length > 0) {
+            // Si les étudiants sont fournis en props, on les utilise directement
+            const etudiantsTries = [...initialEtudiants].sort((a: ParcoursEtudiant, b: ParcoursEtudiant) => {
+                const nomA = a.etudiantId.nom.toLowerCase();
+                const nomB = b.etudiantId.nom.toLowerCase();
+                if (nomA === nomB) {
+                    return a.etudiantId.prenom.toLowerCase().localeCompare(b.etudiantId.prenom.toLowerCase());
+                }
+                return nomA.localeCompare(nomB);
+            });
+            setEtudiants(etudiantsTries);
+            setIsLoading(false);
+        } else {
+            // Sinon on les fetch
+            fetchEtudiant();
+        }
+    }, [selectedMatiere, initialEtudiants]);
 
     // Fonction pour obtenir les notes d'un étudiant pour la matière courante
     const getNotesForMatiere = (etudiant: ParcoursEtudiant) => {
@@ -255,7 +272,7 @@ const FicheCotation = ({
         window.URL.revokeObjectURL(url);
     };
 
-    const handleNoteChange = (etudiantId: string, field: 'cmi' | 'examen' | 'rattrapage', value: string) => {
+    const handleNoteChange = async (etudiantId: string, field: 'cmi' | 'examen' | 'rattrapage', value: string) => {
         const numValue = parseFloat(value);
         const maxValue = field === 'rattrapage' ? 20 : 10;
 
@@ -263,9 +280,10 @@ const FicheCotation = ({
             return;
         }
 
+        // 1. Mise à jour optimiste de l'UI
         setEtudiants(prev => prev.map(etudiant => {
             if (etudiant._id === etudiantId) {
-                const updatedNotes = etudiant.notes || [];
+                const updatedNotes = etudiant.notes ? [...etudiant.notes] : [];
                 const existingNoteIndex = updatedNotes.findIndex(note => note.matiereId === selectedMatiere._id);
                 
                 const currentNotes = getNotesForMatiere(etudiant);
@@ -289,6 +307,27 @@ const FicheCotation = ({
             }
             return etudiant;
         }));
+
+        // 2. Persistance via API
+        try {
+            const response = await fetch('/api/parcours/notes', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    parcoursId: etudiantId, // etudiantId ici correspond à l'ID du parcours (ParcoursEtudiant._id)
+                    matiereId: selectedMatiere._id,
+                    [field]: numValue
+                })
+            });
+
+            const result = await response.json();
+            if (!result.success) {
+                console.error('Erreur sauvegarde note:', result.error);
+                // Optionnel : Revert UI change here if needed
+            }
+        } catch (error) {
+            console.error('Erreur réseau sauvegarde note:', error);
+        }
     };
 
     // Fonction pour sauvegarder toutes les notes via l'API

@@ -5,12 +5,12 @@ export interface IParcours extends Document {
     promotionId: mongoose.Types.ObjectId;
     anneeId: mongoose.Types.ObjectId;
     statut: string
-    notes?: [{
+    notes?: {
         matiereId: mongoose.Types.ObjectId;
         cmi: number;
         examen: number;
         rattrapage: number
-    }]
+    }[]
 }
 
 const ParcoursSchema = new Schema<IParcours>({
