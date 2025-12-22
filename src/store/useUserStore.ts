@@ -35,6 +35,7 @@ export interface ChargeHoraire {
   cours: Matiere;
   enseignant: Agent;
   anneeId: Annee;
+  promotionId: string;
   status: string;
   objectif: string;
   activities: any[];

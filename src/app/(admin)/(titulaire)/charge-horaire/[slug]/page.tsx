@@ -13,6 +13,8 @@ import SeancesLists from "../../components/SeancesLists";
 import Descripteur from "../../components/Descripteur";
 import RessourceManager from "../../components/RessourceManager";
 
+import FicheCotation from '@/components/ui/jury/FicheCotation';
+
 const DashboardCharge = () => {
     const params = useParams();
     const { chargesHoraire, fetchChargesHoraire, agent } = useUserStore();
@@ -20,7 +22,8 @@ const DashboardCharge = () => {
     const charge : any= chargesHoraire ? chargesHoraire.find(c => c._id === slug) : null;
     const [ etudiants, setEtudiants ] =  useState<any[]>([]);
     const [ loading, setLoading ] = useState<boolean>(false);
-    
+    const [showFicheCotation, setShowFicheCotation] = useState(false);
+       
     const handleUpdate = () => {
         if (agent?._id) {
             fetchChargesHoraire(agent._id);
@@ -61,6 +64,30 @@ const DashboardCharge = () => {
         return <LoadingSpinner />;
     }
 
+    if(showFicheCotation) {
+        return (
+            <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
+                <div className="p-4">
+                    <button 
+                        onClick={() => setShowFicheCotation(false)}
+                        className="mb-4 flex items-center text-gray-600 hover:text-gray-900"
+                    >
+                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        Retour au tableau de bord
+                    </button>
+                    <FicheCotation
+                        selectedMatiere={charge?.cours?._id}
+                        anneeActive={charge?.anneeId}
+                        closeFicheCotation={() => setShowFicheCotation(false)}
+                        promotionId={charge?.promotionId}
+                    />
+                </div>
+            </div>
+        );
+    }
+
     return <div className="space-y-8">
         <div className="grid grid-cols-12 gap-4 md:gap-6">
             <div className="col-span-12">
@@ -81,7 +108,7 @@ const DashboardCharge = () => {
             <div className="col-span-12 xl:col-span-3 gap-4 md:gap-6 space-y-6 gap-y-6">
             
                 <RessourceManager chargeId={charge._id} resources={charge.ressources || []} onUpdate={handleUpdate} />
-                <Descripteur charge={charge} onUpdate={handleUpdate} />
+                <Descripteur charge={charge} onUpdate={handleUpdate} showCotation={() => setShowFicheCotation(true)} />
             </div>
 
             <div className="col-span-12">
