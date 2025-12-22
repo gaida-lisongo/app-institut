@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import crypto from 'crypto';
+import { writeFile, mkdir } from 'fs/promises';
+import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(request: NextRequest) {
     try {
@@ -10,40 +12,24 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ success: false, error: 'No file provided' }, { status: 400 });
         }
 
-        const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-        const apiKey = process.env.CLOUDINARY_API_KEY;
-        const apiSecret = process.env.CLOUDINARY_API_SECRET;
-
-        if (!cloudName || !apiKey || !apiSecret) {
-            return NextResponse.json({ success: false, error: 'Cloudinary config missing' }, { status: 500 });
-        }
-
-        const timestamp = Math.round((new Date()).getTime() / 1000);
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const filename = `${uuidv4()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
         
-        // Generate signature
-        // Note: Parameters must be sorted alphabetically. Here we only have timestamp.
-        const paramsToSign = `timestamp=${timestamp}${apiSecret}`;
-        const signature = crypto.createHash('sha1').update(paramsToSign).digest('hex');
-
-        const uploadFormData = new FormData();
-        uploadFormData.append('file', file);
-        uploadFormData.append('api_key', apiKey);
-        uploadFormData.append('timestamp', timestamp.toString());
-        uploadFormData.append('signature', signature);
-
-        const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
-            method: 'POST',
-            body: uploadFormData
-        });
-
-        const data = await response.json();
-
-        if (data.secure_url) {
-            return NextResponse.json({ success: true, url: data.secure_url });
-        } else {
-            console.error('Cloudinary error:', data);
-            return NextResponse.json({ success: false, error: data.error?.message || 'Upload failed' }, { status: 500 });
+        // Ensure uploads directory exists
+        const uploadDir = path.join(process.cwd(), 'uploads');
+        try {
+            await mkdir(uploadDir, { recursive: true });
+        } catch (e) {
+            // Ignore if exists
         }
+
+        const filepath = path.join(uploadDir, filename);
+        await writeFile(filepath, buffer);
+
+        // Return the URL to access the file via our serve endpoint
+        const url = `/api/files/${filename}`;
+
+        return NextResponse.json({ success: true, url });
 
     } catch (error) {
         console.error('Upload error:', error);

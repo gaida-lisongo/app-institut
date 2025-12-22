@@ -78,10 +78,10 @@ const DashboardCharge = () => {
                 <SeancesLists chargeId={charge._id} seances={charge.seances || []} />
             </div>
 
-            <div className="col-span-12 xl:col-span-3">
+            <div className="col-span-12 xl:col-span-3 gap-4 md:gap-6 space-y-6 gap-y-6">
             
-                <Descripteur charge={charge} onUpdate={handleUpdate} />
                 <RessourceManager chargeId={charge._id} resources={charge.ressources || []} onUpdate={handleUpdate} />
+                <Descripteur charge={charge} onUpdate={handleUpdate} />
             </div>
 
             <div className="col-span-12">

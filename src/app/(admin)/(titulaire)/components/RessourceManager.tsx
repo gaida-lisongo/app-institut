@@ -157,14 +157,14 @@ const RessourceManager = ({ chargeId, resources: initialResources = [], onUpdate
 
     return (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
-            {/* Header Compact */}
-            <div className="px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-pink-50 flex justify-between items-center">
-                <h3 className="text-sm font-bold text-gray-900 flex items-center">
-                    <span className="mr-2">📚</span> Ressources
+            {/* Header */}
+            <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                <h3 className="text-sm font-bold text-gray-800 flex items-center">
+                    <span className="mr-2 text-lg">📚</span> Ressources
                 </h3>
                 <button 
                     onClick={() => setShowModal(true)}
-                    className="p-1.5 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+                    className="p-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm"
                     title="Ajouter une ressource"
                 >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -173,88 +173,70 @@ const RessourceManager = ({ chargeId, resources: initialResources = [], onUpdate
                 </button>
             </div>
 
-            {/* Search & Content Compact */}
+            {/* Content */}
             <div className="p-3">
-                <div className="mb-3">
-                    <div className="relative">
-                        <input
-                            type="text"
-                            placeholder="Rechercher..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
-                        />
-                        <svg className="w-4 h-4 text-gray-400 absolute left-2.5 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </div>
-                </div>
-
                 {filteredResources.length === 0 ? (
-                    <div className="text-center py-6 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                        <p className="text-xs text-gray-500">Aucune ressource</p>
+                    <div className="text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                        <p className="text-xs text-gray-500">Aucune ressource disponible</p>
                     </div>
                 ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                         {filteredResources.map((resource) => (
-                            <div key={resource._id} className="bg-white rounded-lg border border-gray-200 hover:shadow-sm transition-all p-2 flex items-center justify-between group">
-                                <div className="flex-1 min-w-0 mr-2">
-                                    <div className="flex items-center justify-between mb-0.5">
-                                        <h4 className="text-sm font-medium text-gray-900 truncate" title={resource.title}>
+                            <div key={resource._id} className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all p-3 group relative">
+                                <div className="flex justify-between items-start mb-2">
+                                    <div className="min-w-0 flex-1 mr-2">
+                                        <h4 className="text-sm font-semibold text-gray-900 truncate" title={resource.title}>
                                             {resource.title}
                                         </h4>
-                                        <span className="text-xs font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
-                                            {resource.montant > 0 ? `${resource.montant} FC` : 'Gratuit'}
-                                        </span>
+                                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
+                                            {resource.description || 'Pas de description'}
+                                        </p>
                                     </div>
-                                    <div className="flex items-center text-xs text-gray-500 space-x-2">
-                                        <span className="flex items-center" title="Commandes">
-                                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${resource.montant > 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+                                        {resource.montant > 0 ? `${resource.montant} FC` : 'Gratuit'}
+                                    </span>
+                                </div>
+                                
+                                <div className="flex items-center justify-between pt-2 border-t border-gray-100 mt-2">
+                                    <div className="flex items-center text-xs text-gray-500">
+                                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                        </svg>
+                                        {resource.commandes?.length || 0} ventes
+                                    </div>
+                                    
+                                    <div className="flex space-x-2">
+                                        <a 
+                                            href={resource.url} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="text-blue-600 hover:text-blue-800 text-xs font-medium flex items-center"
+                                        >
+                                            Télécharger
+                                        </a>
+                                        <button 
+                                            onClick={() => handleDelete(resource._id)}
+                                            className="text-red-500 hover:text-red-700"
+                                            title="Supprimer"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                             </svg>
-                                            {resource.commandes?.length || 0}
-                                        </span>
-                                        {resource.description && (
-                                            <span className="truncate max-w-[150px]" title={resource.description}>
-                                                • {resource.description}
-                                            </span>
-                                        )}
+                                        </button>
                                     </div>
                                 </div>
                                 
-                                <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <a 
-                                        href={resource.url} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
-                                        title="Voir"
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                        </svg>
-                                    </a>
+                                {resource.commandes?.length > 0 && (
                                     <button
                                         onClick={() => exportCSV(resource)}
-                                        disabled={!resource.commandes?.length}
-                                        className="p-1 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded disabled:opacity-30"
-                                        title="Exporter CSV"
+                                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 bg-white border border-gray-200 rounded shadow-sm text-gray-500 hover:text-green-600"
+                                        title="Exporter les commandes"
                                     >
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                         </svg>
                                     </button>
-                                    <button 
-                                        onClick={() => handleDelete(resource._id)}
-                                        className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
-                                        title="Supprimer"
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
-                                </div>
+                                )}
                             </div>
                         ))}
                     </div>
