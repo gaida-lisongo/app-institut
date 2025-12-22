@@ -624,7 +624,7 @@ const AppSidebar: React.FC = () => {
                 icon: <ListIcon />,
                 subItems: gc.charges.map(charge => ({
                   name: (charge.cours as Matiere).designation,
-                  path: `/cours/charge-horaire/${charge._id}`,
+                  path: `/charge-horaire/${charge._id}`,
                 }))
               })), "Charges Horaires")
             }

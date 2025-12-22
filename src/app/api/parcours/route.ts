@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '1000');
+    const limit = parseInt(searchParams.get('limit') || '10000');
     const etudiantId = searchParams.get('etudiantId');
     const promotionId = searchParams.get('promotionId');
     const anneeId = searchParams.get('anneeId');

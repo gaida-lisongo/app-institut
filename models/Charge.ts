@@ -5,6 +5,7 @@ export interface IActivity extends Document {
     title: String;
     description: String;
     type: String;
+    status: String;
     maximumScore: Number;
     resolutions: {
         student: mongoose.Types.ObjectId;
@@ -83,6 +84,7 @@ const ActivitySchema: Schema = new Schema({
     title: { type: String, required: true },
     description: { type: String },
     type: { type: String, required: true },
+    status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
     maximumScore: { type: Number, required: true },
     resolutions: [{
         student: { type: Schema.Types.ObjectId, ref: 'Etudiant', required: true },
