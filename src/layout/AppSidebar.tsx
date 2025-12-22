@@ -16,7 +16,11 @@ import PlugInIcon from "../icons/plug-in.svg";
 import TableIcon from "../icons/table.svg";
 import UserCircleIcon from "../icons/user-circle.svg";
 import SidebarWidget from "./SidebarWidget";
-import { useAutorisations } from "@/store/useUserStore";
+import { ChargeHoraire, useAutorisations, useUserStore } from "@/store/useUserStore";
+import { Matiere } from "@/types/cours";
+import { Agent } from "@/types/jury";
+import { Annee } from "@/app/(admin)/(appariteur)/inscriptions/[cycle]/page";
+import path from "path";
 
 type NavItem = {
   name: string;
@@ -104,6 +108,44 @@ const AppSidebar: React.FC = () => {
   const pathname = usePathname();
   const autorisations = useAutorisations();
   const [menu, setMenu] = useState<MenuType[]>([]);
+  const { agent, chargesHoraire, fetchChargesHoraire } = useUserStore();
+  const [groupedCharges, setGroupedCharges] = useState<{
+    designation: string;
+    charges: ChargeHoraire[];
+    id: string;
+  }[]>([]);
+
+  useEffect(() => {
+    if (agent && agent._id) {
+      fetchChargesHoraire(agent._id);
+    }
+  }, [agent]);
+
+  useEffect(() => {
+    // Grouper les charges horaires par designation des années
+    if (chargesHoraire && chargesHoraire.length > 0) {
+      const grouped : any = [];
+
+      chargesHoraire.forEach((charge) => {
+        const anneeDesignation = (charge.anneeId as Annee).debut + ' - ' + (charge.anneeId as Annee).fin;
+        const anneeId = (charge.anneeId as Annee)._id;
+        const existingGroup = grouped.find(
+          (group: any) => group.designation === anneeDesignation
+        );
+        if (existingGroup) {
+          existingGroup.charges.push(charge);
+        } else {
+          grouped.push({
+            designation: anneeDesignation,
+            charges: [charge],
+            id: anneeId,
+          });
+        }
+      });
+
+      setGroupedCharges(grouped);
+    }
+  }, [chargesHoraire]);
 
   const renderMenuItems = (
     navItems: NavItem[],
@@ -508,6 +550,7 @@ const AppSidebar: React.FC = () => {
     },
   ];
 
+  console.log("Current charge Horaire :", groupedCharges);
   return (
     <aside
       className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
@@ -575,6 +618,16 @@ const AppSidebar: React.FC = () => {
                 ))}
               </>
             ) : null}
+            {
+              chargesHoraire && renderMenu("charges", groupedCharges.map(gc => ({
+                name: gc.designation,
+                icon: <ListIcon />,
+                subItems: gc.charges.map(charge => ({
+                  name: (charge.cours as Matiere).designation,
+                  path: `/cours/charge-horaire/${charge._id}`,
+                }))
+              })), "Charges Horaires")
+            }
             {renderMenu("others", othersItems, "Others")}
             {renderMenu("users", usersMenuItems, "Utilisateurs")}
           </div>

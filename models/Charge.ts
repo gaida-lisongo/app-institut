@@ -57,6 +57,7 @@ export interface ICharge extends Document {
     cours: mongoose.Types.ObjectId;
     enseignant: mongoose.Types.ObjectId;
     anneeId: mongoose.Types.ObjectId;
+    promotionId: mongoose.Types.ObjectId;
     status: String;
     activities: mongoose.Types.ObjectId[];
     ressources: mongoose.Types.ObjectId[];
@@ -136,6 +137,7 @@ const SeanceSchema: Schema = new Schema({
 const ChargeSchema: Schema = new Schema({
     cours: { type: Schema.Types.ObjectId, ref: 'Matiere', required: true },
     anneeId: { type: Schema.Types.ObjectId, ref: 'Annee', required: true },
+    promotionId: { type: Schema.Types.ObjectId, ref: 'Promotion' },
     enseignant: { type: Schema.Types.ObjectId, ref: 'Agent', required: true },
     status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
     activities: [{ type: Schema.Types.ObjectId, ref: 'Activity' }],

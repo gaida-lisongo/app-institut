@@ -1,3 +1,5 @@
+import { Annee } from '@/app/(admin)/(appariteur)/inscriptions/[cycle]/page';
+import { Matiere } from '@/types/cours';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
@@ -28,6 +30,30 @@ export interface Agent {
   __v: number;
 }
 
+export interface ChargeHoraire {
+  _id: string;
+  cours: Matiere;
+  enseignant: Agent;
+  anneeId: Annee;
+  status: string;
+  objectif: string;
+  activities: any[];
+  ressources: any[];
+  recours: any[];
+  seances: any[];
+  contenu: string;
+  methodologie: string;
+  evaluation: string;
+  references: string;
+  plannings: {
+      date_debut: Date;
+      date_fin: Date;
+      heure_debut: string;
+      heure_fin: string;
+  }[];
+
+}
+
 export interface Autorisation {
   _id: string;
   designation: string;
@@ -40,6 +66,7 @@ export interface UserState {
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
+  chargesHoraire: any[] | null;
   
   // Actions de base
   setUser: (agent: Agent, autorisations: Autorisation[]) => void;
@@ -49,6 +76,8 @@ export interface UserState {
   clearUser: () => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  setChargesHoraire: (charges: any[] | null) => void;
+  fetchChargesHoraire: (enseignantId: string) => Promise<void>;
   
   // Actions d'authentification
   authenticateAgent: (agentId: string) => Promise<{ success: boolean; error?: string; data?: any }>;
@@ -71,6 +100,7 @@ export const useUserStore = create<UserState>()(
       isAuthenticated: false,
       loading: false,
       error: null,
+      chargesHoraire: null,
 
       // Actions de base
       setUser: (agent: Agent, autorisations: Autorisation[]) => {
@@ -80,6 +110,33 @@ export const useUserStore = create<UserState>()(
           isAuthenticated: true,
           error: null,
         });
+      },
+
+      fetchChargesHoraire: async (enseignantId: string) => {
+        set({ loading: true, error: null });
+        try {
+          const response = await fetch(`/api/charges?enseignantId=${enseignantId}`);
+          const result = await response.json();
+          if (response.ok) {
+            console.log("Charges horaires récupérées :", result.data);
+            set({ chargesHoraire: result.data, loading: false });
+          } else {
+            console.error("Erreur lors de la récupération des charges horaires :", result.error);
+          }
+        } catch (error) {
+          console.error("Erreur lors de la récupération des charges horaires :", error);
+          set({ error: 'Erreur lors de la récupération des charges horaires' });
+        } finally {
+          set({ loading: false });
+        }
+      },
+
+      setChargesHoraire(charges) {
+        try {
+          set({ chargesHoraire: charges });
+        } catch (error) {
+          console.error('Erreur lors de la mise à jour des charges horaires :', error);
+        }
       },
 
       updateAgent: (agentUpdate: Partial<Agent>) => {

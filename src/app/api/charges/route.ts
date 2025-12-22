@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
       .populate('cours')
       .populate('enseignant')
       .populate('anneeId')
+      .populate('promotionId')
       .populate({
         path: 'activities',
         populate: {
@@ -132,6 +133,7 @@ export async function GET(request: NextRequest) {
         .populate('cours')
         .populate('enseignant')
         .populate('anneeId')
+        .populate('promotionId')
         .sort({ createdAt: -1 });
 
       return NextResponse.json({
@@ -161,6 +163,7 @@ export async function POST(request: NextRequest) {
       cours,
       enseignant,
       anneeId,
+      promotionId,
       status = 'pending',
       objectif = '',
       contenu = '',
@@ -171,9 +174,9 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validation des champs obligatoires
-    if (!cours || !enseignant || !anneeId) {
+    if (!cours || !enseignant || !anneeId || !promotionId) {
       return NextResponse.json(
-        { success: false, error: 'Cours, enseignant et année sont obligatoires' },
+        { success: false, error: 'Cours, enseignant, année et promotion sont obligatoires' },
         { status: 400 }
       );
     }
@@ -181,7 +184,8 @@ export async function POST(request: NextRequest) {
     // Validation des IDs
     if (!mongoose.Types.ObjectId.isValid(cours) || 
         !mongoose.Types.ObjectId.isValid(enseignant) || 
-        !mongoose.Types.ObjectId.isValid(anneeId)) {
+        !mongoose.Types.ObjectId.isValid(anneeId) ||
+        !mongoose.Types.ObjectId.isValid(promotionId)) {
       return NextResponse.json(
         { success: false, error: 'IDs invalides' },
         { status: 400 }
@@ -206,6 +210,7 @@ export async function POST(request: NextRequest) {
       cours,
       enseignant,
       anneeId,
+      promotionId,
       status: status || 'pending',
       objectif: objectif?.trim(),
       contenu: contenu?.trim(),
@@ -225,7 +230,8 @@ export async function POST(request: NextRequest) {
     const chargeWithDetails = await Charge.findById(savedCharge._id)
       .populate('cours')
       .populate('enseignant')
-      .populate('anneeId');
+      .populate('anneeId')
+      .populate('promotionId');
 
     return NextResponse.json({
       success: true,
@@ -292,6 +298,7 @@ export async function PUT(request: NextRequest) {
     const updateData: any = {};
     
     if (status !== undefined) updateData.status = status;
+    if (enseignant !== undefined) updateData.enseignant = enseignant;
     if (objectif !== undefined) updateData.objectif = objectif?.trim();
     if (contenu !== undefined) updateData.contenu = contenu?.trim();
     if (methodologie !== undefined) updateData.methodologie = methodologie?.trim();
@@ -311,7 +318,8 @@ export async function PUT(request: NextRequest) {
     )
     .populate('cours', 'designation code')
     .populate('enseignant', 'nom prenom')
-    .populate('anneeId', 'debut fin');
+    .populate('anneeId', 'debut fin')
+    .populate('promotionId', 'designation niveau');
 
     return NextResponse.json({
       success: true,

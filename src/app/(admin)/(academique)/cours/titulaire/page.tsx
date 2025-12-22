@@ -3,7 +3,25 @@
 import { useState, useEffect } from "react";
 import { Promotion } from "@/app/(resultat)/layout";
 import { useAcademique } from "../../layout";
-import { Unite, Matiere, Agent } from "@/types/jury";
+import { Agent } from "@/types/jury";
+
+// Interface locale pour Matiere (compatible avec les données reçues)
+interface Matiere {
+  _id: string;
+  designation: string;
+  code?: string;
+  credits: number;
+  coefficient?: number;
+}
+
+// Interface locale pour Unite (compatible avec les données reçues)
+interface Unite {
+  _id: string;
+  designation: string;
+  code: string;
+  credits: number;
+  matieres?: Matiere[];
+}
 
 // Interface pour l'affectation
 interface AffectationEnseignant {
@@ -139,8 +157,8 @@ const ChargesHoraire = () => {
 
   // Gestionnaire pour affecter un enseignant
   const handleAffectation = async () => {
-    if (!selectedMatiere || !selectedEnseignant || !selectedAnneeId) {
-      alert("Veuillez remplir tous les champs");
+    if (!selectedMatiere || !selectedEnseignant || !selectedAnneeId || !selectedPromotion) {
+      alert("Veuillez remplir tous les champs et sélectionner une promotion");
       return;
     }
 
@@ -150,6 +168,7 @@ const ChargesHoraire = () => {
         cours: selectedMatiere._id,
         enseignant: selectedEnseignant,
         anneeId: selectedAnneeId,
+        promotionId: selectedPromotion._id,
         status: 'pending' // Créé en mode pending par défaut
       };
 

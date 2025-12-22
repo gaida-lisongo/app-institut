@@ -15,7 +15,6 @@ export interface Matiere {
   credits: number;
   coefficient: number;
 }
-
 export interface Unite {
   _id: string;
   designation: string;
@@ -43,8 +42,14 @@ export interface JuryPromotion {
 export interface Agent {
   _id: string;
   nom: string;
+  post_nom: string;
   prenom: string;
   email: string;
+  grade: any;
+  matricule: string;
+  secure: string;
+  sexe: string;
+  telephone: string;
 }
 
 export interface BureauMember {
