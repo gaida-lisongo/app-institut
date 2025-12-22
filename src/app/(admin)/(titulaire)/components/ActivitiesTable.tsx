@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Etudiant } from "@/app/(resultat)/layout";
 import { ListIcon } from "@/icons";
+import { useUserStore } from '@/store/useUserStore';
 
 
 type Resolution = {
@@ -28,6 +29,7 @@ const ActivitiesTable = ({
     data,
     chargeId
 } : { data: Activity[], chargeId: string }) => {
+    const { addActivity, updateActivity, deleteActivity } = useUserStore();
     // États pour le CRUD des activités
     const [activities, setActivities] = useState<Activity[]>([]);
     const [showActivityModal, setShowActivityModal] = useState(false);
@@ -65,25 +67,14 @@ const ActivitiesTable = ({
 
         setLoadingActivity(true);
         try {
-            const response = await fetch('/api/charges/activites', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    ...activityForm,
-                    chargeId: chargeId
-                })
-            });
+            const success = await addActivity(chargeId, activityForm);
 
-            const result = await response.json();
-            if (result.success) {
-                setActivities([result.data, ...activities]);
+            if (success) {
                 resetActivityForm();
                 setShowActivityModal(false);
                 alert('Activité créée avec succès!');
             } else {
-                alert(result.error || 'Erreur lors de la création');
+                alert('Erreur lors de la création');
             }
         } catch (error) {
             console.error('Erreur:', error);
@@ -101,27 +92,14 @@ const ActivitiesTable = ({
 
         setLoadingActivity(true);
         try {
-            const response = await fetch('/api/charges/activites', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    id: selectedActivity._id,
-                    ...activityForm
-                })
-            });
+            const success = await updateActivity(chargeId, selectedActivity._id, activityForm);
 
-            const result = await response.json();
-            if (result.success) {
-                setActivities(activities.map(activity => 
-                    activity._id === selectedActivity._id ? result.data : activity
-                ));
+            if (success) {
                 resetActivityForm();
                 setShowActivityModal(false);
                 alert('Activité mise à jour avec succès!');
             } else {
-                alert(result.error || 'Erreur lors de la mise à jour');
+                alert('Erreur lors de la mise à jour');
             }
         } catch (error) {
             console.error('Erreur:', error);
@@ -137,16 +115,12 @@ const ActivitiesTable = ({
         }
 
         try {
-            const response = await fetch(`/api/charges/activites?id=${activityId}`, {
-                method: 'DELETE'
-            });
+            const success = await deleteActivity(chargeId, activityId);
 
-            const result = await response.json();
-            if (result.success) {
-                setActivities(activities.filter(activity => activity._id !== activityId));
+            if (success) {
                 alert('Activité supprimée avec succès!');
             } else {
-                alert(result.error || 'Erreur lors de la suppression');
+                alert('Erreur lors de la suppression');
             }
         } catch (error) {
             console.error('Erreur:', error);

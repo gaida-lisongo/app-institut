@@ -257,6 +257,7 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const {
       id,
+      enseignant,
       status,
       objectif,
       contenu,
@@ -319,7 +320,35 @@ export async function PUT(request: NextRequest) {
     .populate('cours', 'designation code')
     .populate('enseignant', 'nom prenom')
     .populate('anneeId', 'debut fin')
-    .populate('promotionId', 'designation niveau');
+    .populate('promotionId', 'designation niveau')
+    .populate({
+      path: 'activities',
+      populate: {
+        path: 'resolutions.student',
+        model: 'Etudiant'
+      }
+    })
+    .populate({
+      path: 'ressources',
+      populate: {
+        path: 'commandes',
+        model: 'Etudiant'
+      }
+    })
+    .populate({
+      path: 'recours',
+      populate: {
+        path: 'student',
+        model: 'Etudiant'
+      }
+    })
+    .populate({
+      path: 'seances',
+      populate: {
+        path: 'presences.student',
+        model: 'Etudiant'
+      }
+    });
 
     return NextResponse.json({
       success: true,

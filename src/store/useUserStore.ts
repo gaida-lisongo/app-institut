@@ -78,6 +78,17 @@ export interface UserState {
   setError: (error: string | null) => void;
   setChargesHoraire: (charges: any[] | null) => void;
   fetchChargesHoraire: (enseignantId: string) => Promise<void>;
+  updateCharge: (chargeId: string, data: any) => Promise<boolean>;
+  
+  // Actions pour les activités
+  addActivity: (chargeId: string, activityData: any) => Promise<boolean>;
+  updateActivity: (chargeId: string, activityId: string, activityData: any) => Promise<boolean>;
+  deleteActivity: (chargeId: string, activityId: string) => Promise<boolean>;
+
+  // Actions pour les séances
+  addSeance: (chargeId: string, seanceData: any) => Promise<boolean>;
+  updateSeance: (chargeId: string, seanceId: string, seanceData: any) => Promise<boolean>;
+  deleteSeance: (chargeId: string, seanceId: string) => Promise<boolean>;
   
   // Actions d'authentification
   authenticateAgent: (agentId: string) => Promise<{ success: boolean; error?: string; data?: any }>;
@@ -136,6 +147,237 @@ export const useUserStore = create<UserState>()(
           set({ chargesHoraire: charges });
         } catch (error) {
           console.error('Erreur lors de la mise à jour des charges horaires :', error);
+        }
+      },
+
+      updateCharge: async (chargeId: string, data: any) => {
+        set({ loading: true, error: null });
+        try {
+          const response = await fetch('/api/charges', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: chargeId, ...data })
+          });
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            // Mettre à jour le store localement
+            const currentCharges = get().chargesHoraire;
+            if (currentCharges) {
+              const updatedCharges = currentCharges.map(c => 
+                c._id === chargeId ? result.data : c
+              );
+              set({ chargesHoraire: updatedCharges, loading: false });
+            } else {
+              set({ loading: false });
+            }
+            return true;
+          } else {
+            set({ error: result.error || 'Erreur lors de la mise à jour', loading: false });
+            return false;
+          }
+        } catch (error) {
+          console.error('Erreur updateCharge:', error);
+          set({ error: 'Erreur de connexion', loading: false });
+          return false;
+        }
+      },
+
+      // Activités
+      addActivity: async (chargeId: string, activityData: any) => {
+        set({ loading: true, error: null });
+        try {
+          const response = await fetch('/api/charges/activites', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...activityData, chargeId })
+          });
+          const result = await response.json();
+          
+          if (result.success) {
+            // Mettre à jour la charge dans le store
+            const currentCharges = get().chargesHoraire;
+            if (currentCharges) {
+              const updatedCharges = currentCharges.map(c => {
+                if (c._id === chargeId) {
+                  return { ...c, activities: [result.data, ...(c.activities || [])] };
+                }
+                return c;
+              });
+              set({ chargesHoraire: updatedCharges, loading: false });
+            }
+            return true;
+          }
+          set({ error: result.error, loading: false });
+          return false;
+        } catch (error) {
+          set({ error: 'Erreur connexion', loading: false });
+          return false;
+        }
+      },
+
+      updateActivity: async (chargeId: string, activityId: string, activityData: any) => {
+        set({ loading: true, error: null });
+        try {
+          const response = await fetch('/api/charges/activites', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: activityId, ...activityData })
+          });
+          const result = await response.json();
+          
+          if (result.success) {
+            const currentCharges = get().chargesHoraire;
+            if (currentCharges) {
+              const updatedCharges = currentCharges.map(c => {
+                if (c._id === chargeId) {
+                  const updatedActivities = (c.activities || []).map((a: any) => 
+                    a._id === activityId ? result.data : a
+                  );
+                  return { ...c, activities: updatedActivities };
+                }
+                return c;
+              });
+              set({ chargesHoraire: updatedCharges, loading: false });
+            }
+            return true;
+          }
+          set({ error: result.error, loading: false });
+          return false;
+        } catch (error) {
+          set({ error: 'Erreur connexion', loading: false });
+          return false;
+        }
+      },
+
+      deleteActivity: async (chargeId: string, activityId: string) => {
+        set({ loading: true, error: null });
+        try {
+          const response = await fetch(`/api/charges/activites?id=${activityId}`, {
+            method: 'DELETE'
+          });
+          const result = await response.json();
+          
+          if (result.success) {
+            const currentCharges = get().chargesHoraire;
+            if (currentCharges) {
+              const updatedCharges = currentCharges.map(c => {
+                if (c._id === chargeId) {
+                  return { 
+                    ...c, 
+                    activities: (c.activities || []).filter((a: any) => a._id !== activityId) 
+                  };
+                }
+                return c;
+              });
+              set({ chargesHoraire: updatedCharges, loading: false });
+            }
+            return true;
+          }
+          set({ error: result.error, loading: false });
+          return false;
+        } catch (error) {
+          set({ error: 'Erreur connexion', loading: false });
+          return false;
+        }
+      },
+
+      // Séances
+      addSeance: async (chargeId: string, seanceData: any) => {
+        set({ loading: true, error: null });
+        try {
+          const response = await fetch(`/api/seances?chargeId=${chargeId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(seanceData)
+          });
+          const result = await response.json();
+          
+          if (result.success) {
+            const currentCharges = get().chargesHoraire;
+            if (currentCharges) {
+              const updatedCharges = currentCharges.map(c => {
+                if (c._id === chargeId) {
+                  return { ...c, seances: [result.data, ...(c.seances || [])] };
+                }
+                return c;
+              });
+              set({ chargesHoraire: updatedCharges, loading: false });
+            }
+            return true;
+          }
+          set({ error: result.error, loading: false });
+          return false;
+        } catch (error) {
+          set({ error: 'Erreur connexion', loading: false });
+          return false;
+        }
+      },
+
+      updateSeance: async (chargeId: string, seanceId: string, seanceData: any) => {
+        set({ loading: true, error: null });
+        try {
+          const response = await fetch('/api/seances', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: seanceId, ...seanceData })
+          });
+          const result = await response.json();
+          
+          if (result.success) {
+            const currentCharges = get().chargesHoraire;
+            if (currentCharges) {
+              const updatedCharges = currentCharges.map(c => {
+                if (c._id === chargeId) {
+                  const updatedSeances = (c.seances || []).map((s: any) => 
+                    s._id === seanceId ? result.data : s
+                  );
+                  return { ...c, seances: updatedSeances };
+                }
+                return c;
+              });
+              set({ chargesHoraire: updatedCharges, loading: false });
+            }
+            return true;
+          }
+          set({ error: result.error, loading: false });
+          return false;
+        } catch (error) {
+          set({ error: 'Erreur connexion', loading: false });
+          return false;
+        }
+      },
+
+      deleteSeance: async (chargeId: string, seanceId: string) => {
+        set({ loading: true, error: null });
+        try {
+          const response = await fetch(`/api/seances?id=${seanceId}`, {
+            method: 'DELETE'
+          });
+          const result = await response.json();
+          
+          if (result.success) {
+            const currentCharges = get().chargesHoraire;
+            if (currentCharges) {
+              const updatedCharges = currentCharges.map(c => {
+                if (c._id === chargeId) {
+                  return { 
+                    ...c, 
+                    seances: (c.seances || []).filter((s: any) => s._id !== seanceId) 
+                  };
+                }
+                return c;
+              });
+              set({ chargesHoraire: updatedCharges, loading: false });
+            }
+            return true;
+          }
+          set({ error: result.error, loading: false });
+          return false;
+        } catch (error) {
+          set({ error: 'Erreur connexion', loading: false });
+          return false;
         }
       },
 

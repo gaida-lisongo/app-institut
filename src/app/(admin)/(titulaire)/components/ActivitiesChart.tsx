@@ -41,11 +41,10 @@ const ActivitiesChart = ({ activities }: ActivitiesChartProps) => {
         }
 
         // Préparer les données pour le graphique
-        const activityNames = activities.map(activity => 
-            activity.title.length > 20 ? 
-            `${activity.title.substring(0, 20)}...` : 
-            activity.title
-        );
+        const activityNames = activities.map(activity => {
+            const title = activity?.title || 'Sans titre';
+            return title.length > 20 ? `${title.substring(0, 20)}...` : title;
+        });
         
         const resolutionsCount = activities.map(activity => 
             activity.resolutions?.length || 0
