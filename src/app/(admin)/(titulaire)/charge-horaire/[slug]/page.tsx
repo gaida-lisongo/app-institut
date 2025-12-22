@@ -8,6 +8,7 @@ import { useParams } from "next/navigation";
 import { JSX, useEffect, useState } from "react";
 import ActivitiesTable from "../../components/ActivitiesTable";
 import MetricsCharge from "../../components/MetricsCharge";
+import ActivitiesChart from "../../components/ActivitiesChart";
 
 const DashboardCharge = () => {
     const params = useParams();
@@ -60,6 +61,7 @@ const DashboardCharge = () => {
             totalRecours={charge?.recours?.length || 0}
             totalStudents={etudiants.length}
         />
+        <ActivitiesChart activities={charge.activities || []} />
         <ActivitiesTable data={charge.activities || []} chargeId={charge._id} />
     </div>;
 }
