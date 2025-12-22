@@ -129,7 +129,7 @@ const DashboardPage = ({ onBack }: { onBack: () => void }) => {
                             </div>
                             <h3 className="font-semibold text-white text-sm">Modifier mes informations</h3>
                         </button>
-                        <button
+                        {/* <button
                             onClick={() => setCurrentView('recharge')}
                             className="bg-gray-800 rounded-xl p-4 text-center shadow-md hover:shadow-lg transition-all transform hover:scale-105"
                         >
@@ -139,7 +139,7 @@ const DashboardPage = ({ onBack }: { onBack: () => void }) => {
                                 </svg>
                             </div>
                             <h3 className="font-semibold text-white text-sm">Recharger mon compte</h3>
-                        </button>
+                        </button> */}
                     </div>
                 </div>
             );
