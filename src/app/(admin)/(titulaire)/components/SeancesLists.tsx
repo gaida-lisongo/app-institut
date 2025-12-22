@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useUserStore } from '@/store/useUserStore';
+import SeanceSheetGenerator from '@/utils/SeanceSheet';
 
 interface Student {
     _id: string;
@@ -41,6 +42,7 @@ const SeancesLists = ({ chargeId, seances: initialSeances = [] }: SeancesListsPr
     const { addSeance, updateSeance, deleteSeance } = useUserStore();
     const [seances, setSeances] = useState<Seance[]>(initialSeances);
     const [loading, setLoading] = useState(false);
+    const [generatingSheet, setGeneratingSheet] = useState<string | null>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     
     useEffect(() => {
@@ -111,6 +113,83 @@ const SeancesLists = ({ chargeId, seances: initialSeances = [] }: SeancesListsPr
             }
         } catch (error) {
             console.error('Erreur suppression:', error);
+        }
+    };
+
+    const handleGenerateSheet = async (seance: Seance) => {
+        setGeneratingSheet(seance._id);
+        try {
+            const result = await SeanceSheetGenerator.generateSeanceSheet(seance, undefined, true);
+            
+            if (result.success) {
+                // Afficher un message de succès avec information sur la géolocalisation
+                const notification = document.createElement('div');
+                const bgColor = result.usedDefaultLocation ? 'bg-yellow-500' : 'bg-green-500';
+                const icon = result.usedDefaultLocation ? '⚠️' : '✅';
+                
+                notification.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 max-w-sm`;
+                notification.innerHTML = `
+                    <div class="flex items-start">
+                        <span class="mr-2">${icon}</span>
+                        <div>
+                            <div class="font-medium">Fiche générée !</div>
+                            <div class="text-sm opacity-90">${result.message}</div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, result.usedDefaultLocation ? 5000 : 3000);
+            } else {
+                // Afficher un message d'erreur
+                const errorNotification = document.createElement('div');
+                errorNotification.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 max-w-sm';
+                errorNotification.innerHTML = `
+                    <div class="flex items-start">
+                        <span class="mr-2">❌</span>
+                        <div>
+                            <div class="font-medium">Erreur de génération</div>
+                            <div class="text-sm opacity-90">${result.message}</div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(errorNotification);
+                
+                setTimeout(() => {
+                    if (document.body.contains(errorNotification)) {
+                        document.body.removeChild(errorNotification);
+                    }
+                }, 5000);
+            }
+            
+        } catch (error) {
+            console.error('Erreur génération fiche:', error);
+            
+            // Afficher un message d'erreur fallback
+            const errorNotification = document.createElement('div');
+            errorNotification.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 max-w-sm';
+            errorNotification.innerHTML = `
+                <div class="flex items-start">
+                    <span class="mr-2">❌</span>
+                    <div>
+                        <div class="font-medium">Erreur inattendue</div>
+                        <div class="text-sm opacity-90">${error instanceof Error ? error.message : 'Impossible de générer la fiche'}</div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(errorNotification);
+            
+            setTimeout(() => {
+                if (document.body.contains(errorNotification)) {
+                    document.body.removeChild(errorNotification);
+                }
+            }, 5000);
+        } finally {
+            setGeneratingSheet(null);
         }
     };
 
@@ -242,8 +321,24 @@ const SeancesLists = ({ chargeId, seances: initialSeances = [] }: SeancesListsPr
                                         </span>
                                         <div className="flex space-x-1">
                                             <button 
+                                                onClick={() => handleGenerateSheet(seance)}
+                                                disabled={generatingSheet === seance._id}
+                                                className="p-1 text-gray-400 hover:text-purple-600 transition-colors disabled:opacity-50"
+                                                title="Générer fiche de séance avec QR-code"
+                                            >
+                                                {generatingSheet === seance._id ? (
+                                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
+                                                ) : (
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 4L9.5 6.5a1.5 1.5 0 000 2.12L12 11.5a1.5 1.5 0 002.12 0L16.5 9a1.5 1.5 0 000-2.12L14 4.5a1.5 1.5 0 00-2 0z" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 14a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    </svg>
+                                                )}
+                                            </button>
+                                            <button 
                                                 onClick={() => openEdit(seance)}
                                                 className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                                                title="Modifier la séance"
                                             >
                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -252,6 +347,7 @@ const SeancesLists = ({ chargeId, seances: initialSeances = [] }: SeancesListsPr
                                             <button 
                                                 onClick={() => handleDelete(seance._id)}
                                                 className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                                                title="Supprimer la séance"
                                             >
                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -286,7 +382,7 @@ const SeancesLists = ({ chargeId, seances: initialSeances = [] }: SeancesListsPr
                                     </div>
                                 </div>
 
-                                <div className="p-4 border-t border-gray-100 bg-gray-50 rounded-b-xl">
+                                <div className="p-4 border-t border-gray-100 bg-gray-50 rounded-b-xl space-y-2">
                                     <button
                                         onClick={() => { setSelectedSeance(seance); setShowPresencesModal(true); }}
                                         className="w-full py-2 px-4 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-teal-600 transition-colors flex items-center justify-center"
@@ -295,6 +391,26 @@ const SeancesLists = ({ chargeId, seances: initialSeances = [] }: SeancesListsPr
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                                         </svg>
                                         Voir présences
+                                    </button>
+                                    
+                                    <button
+                                        onClick={() => handleGenerateSheet(seance)}
+                                        disabled={generatingSheet === seance._id}
+                                        className="w-full py-2 px-4 bg-purple-50 border border-purple-200 rounded-lg text-sm font-medium text-purple-700 hover:bg-purple-100 transition-colors flex items-center justify-center disabled:opacity-50"
+                                    >
+                                        {generatingSheet === seance._id ? (
+                                            <>
+                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600 mr-2"></div>
+                                                Génération...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                </svg>
+                                                Fiche QR
+                                            </>
+                                        )}
                                     </button>
                                 </div>
                             </div>
@@ -348,7 +464,7 @@ const SeancesLists = ({ chargeId, seances: initialSeances = [] }: SeancesListsPr
                                         value={formData.location}
                                         onChange={(e) => setFormData({...formData, location: e.target.value})}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                                        placeholder="Ex: Salle A12"
+                                        placeholder="Salle de classe, amphi..."
                                     />
                                 </div>
                             </div>
@@ -379,23 +495,24 @@ const SeancesLists = ({ chargeId, seances: initialSeances = [] }: SeancesListsPr
                                     onChange={(e) => setFormData({...formData, description: e.target.value})}
                                     rows={3}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                                    placeholder="Détails supplémentaires..."
+                                    placeholder="Description détaillée de la séance..."
                                 />
                             </div>
                         </div>
-                        <div className="px-6 py-4 bg-gray-50 rounded-b-xl flex space-x-3">
-                            <button
+                        
+                        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl flex justify-end space-x-3">
+                            <button 
                                 onClick={() => { setShowCreateModal(false); setShowEditModal(false); }}
-                                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-white transition-colors"
+                                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                             >
                                 Annuler
                             </button>
                             <button
                                 onClick={showEditModal ? handleUpdate : handleCreate}
                                 disabled={!formData.topic || !formData.date || !formData.startTime || !formData.endTime}
-                                className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {showEditModal ? 'Enregistrer' : 'Créer'}
+                                {showEditModal ? 'Modifier' : 'Créer'}
                             </button>
                         </div>
                     </div>
@@ -405,82 +522,82 @@ const SeancesLists = ({ chargeId, seances: initialSeances = [] }: SeancesListsPr
             {/* Modal Présences */}
             {showPresencesModal && selectedSeance && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
                         <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                            <div>
-                                <h3 className="text-lg font-bold text-gray-900">Liste des présences</h3>
-                                <p className="text-sm text-gray-500">{selectedSeance.topic} - {new Date(selectedSeance.date).toLocaleDateString('fr-FR')}</p>
+                            <h3 className="text-lg font-bold text-gray-900">
+                                Présences - {selectedSeance.topic}
+                            </h3>
+                            <div className="flex items-center space-x-3">
+                                <button 
+                                    onClick={() => exportToCSV(selectedSeance)}
+                                    className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
+                                >
+                                    Exporter CSV
+                                </button>
+                                <button 
+                                    onClick={() => setShowPresencesModal(false)}
+                                    className="text-gray-400 hover:text-gray-600"
+                                >
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
                             </div>
-                            <button 
-                                onClick={() => setShowPresencesModal(false)}
-                                className="text-gray-400 hover:text-gray-600"
-                            >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
                         </div>
                         
-                        <div className="p-6 overflow-y-auto flex-1">
-                            {selectedSeance.presences && selectedSeance.presences.length > 0 ? (
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Étudiant</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Heure</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {selectedSeance.presences.map((presence) => (
-                                            <tr key={presence._id}>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="flex items-center">
-                                                        <div className="h-8 w-8 rounded-full bg-teal-100 flex items-center justify-center text-teal-700 font-bold text-xs">
-                                                            {presence.student.nom[0]}{presence.student.prenom[0]}
-                                                        </div>
-                                                        <div className="ml-3">
+                        <div className="p-6 overflow-y-auto">
+                            {selectedSeance.presences.length === 0 ? (
+                                <div className="text-center py-12">
+                                    <svg className="w-12 h-12 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                    </svg>
+                                    <p className="text-gray-500">Aucune présence enregistrée pour cette séance</p>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Étudiant</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Heure</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lieu</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                            {selectedSeance.presences.map((presence) => (
+                                                <tr key={presence._id}>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div>
                                                             <div className="text-sm font-medium text-gray-900">
                                                                 {presence.student.nom} {presence.student.prenom}
                                                             </div>
-                                                            <div className="text-xs text-gray-500">{presence.student.matricule}</div>
+                                                            <div className="text-sm text-gray-500">
+                                                                {presence.student.matricule}
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    {new Date(presence.timeRecorded).toLocaleTimeString()}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                                        presence.status === 'present' ? 'bg-green-100 text-green-800' : 
-                                                        presence.status === 'retard' ? 'bg-yellow-100 text-yellow-800' : 
-                                                        'bg-red-100 text-red-800'
-                                                    }`}>
-                                                        {presence.status}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            ) : (
-                                <div className="text-center py-8 text-gray-500">
-                                    Aucune présence enregistrée pour cette séance
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                            presence.status === 'present' 
+                                                                ? 'bg-green-100 text-green-800'
+                                                                : 'bg-red-100 text-red-800'
+                                                        }`}>
+                                                            {presence.status === 'present' ? 'Présent' : 'Absent'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                        {new Date(presence.timeRecorded).toLocaleTimeString('fr-FR')}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {presence.location || 'Non spécifié'}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
                                 </div>
                             )}
-                        </div>
-
-                        <div className="px-6 py-4 bg-gray-50 rounded-b-xl border-t border-gray-200 flex justify-end">
-                            <button
-                                onClick={() => exportToCSV(selectedSeance)}
-                                disabled={!selectedSeance.presences || selectedSeance.presences.length === 0}
-                                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                </svg>
-                                Exporter CSV
-                            </button>
                         </div>
                     </div>
                 </div>
