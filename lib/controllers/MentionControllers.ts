@@ -243,7 +243,19 @@ export const fetchFilieresOfSectionByAgentId = async (agentId: string) => {
         path: 'filieres',
         populate: {
           path: 'promotions',
-          model: 'Promotion'
+          model: 'Promotion',
+          populate: {
+            path: 'semestres',
+            model: 'Semestre',
+            populate: {
+              path: 'unites',
+              model: 'Unite',
+              populate: {
+                path: 'matieres',
+                model: 'Matiere'
+              }
+            }
+          }
         }
       });
 
