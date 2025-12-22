@@ -11,6 +11,7 @@ import MetricsCharge from "../../components/MetricsCharge";
 import ActivitiesChart from "../../components/ActivitiesChart";
 import SeancesLists from "../../components/SeancesLists";
 import Descripteur from "../../components/Descripteur";
+import RessourceManager from "../../components/RessourceManager";
 
 const DashboardCharge = () => {
     const params = useParams();
@@ -76,10 +77,11 @@ const DashboardCharge = () => {
                 <ActivitiesChart activities={charge.activities || []} />
                 <SeancesLists chargeId={charge._id} seances={charge.seances || []} />
             </div>
-        
+
             <div className="col-span-12 xl:col-span-3">
             
                 <Descripteur charge={charge} onUpdate={handleUpdate} />
+                <RessourceManager chargeId={charge._id} resources={charge.ressources || []} onUpdate={handleUpdate} />
             </div>
 
             <div className="col-span-12">

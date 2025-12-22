@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       }
 
       const resource = await Resource.findById(id)
-        .populate('commandes', 'nom prenom matricule');
+        .populate('commandes');
 
       if (!resource) {
         return NextResponse.json(

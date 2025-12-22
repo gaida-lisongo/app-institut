@@ -84,24 +84,26 @@ const Descripteur = ({ charge, onUpdate }: DescripteurProps) => {
 
     return (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            {/* Header */}
-            <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white flex justify-between items-center">
-                <div>
-                    <h2 className="text-xl font-bold text-gray-900">{charge.cours?.designation || 'Cours sans nom'}</h2>
-                    <div className="flex items-center mt-1 space-x-2">
-                        <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-                            {charge.cours?.credits || 0} Crédits
+            {/* Header Compact */}
+            <div className="px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white flex justify-between items-center">
+                <div className="min-w-0">
+                    <h2 className="text-sm font-bold text-gray-900 truncate" title={charge.cours?.designation}>
+                        {charge.cours?.designation || 'Cours sans nom'}
+                    </h2>
+                    <div className="flex items-center mt-0.5 space-x-2">
+                        <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-medium rounded-full">
+                            {charge.cours?.credits || 0} C
                         </span>
-                        <span className="text-sm text-gray-500">• {charge.cours?.code || 'N/A'}</span>
+                        <span className="text-xs text-gray-500 truncate">• {charge.cours?.code || 'N/A'}</span>
                     </div>
                 </div>
                 
-                <div className="relative">
+                <div className="relative ml-2">
                     <button 
                         onClick={() => setShowMenu(!showMenu)}
-                        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                        className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
                     >
-                        <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                         </svg>
                     </button>
@@ -112,12 +114,12 @@ const Descripteur = ({ charge, onUpdate }: DescripteurProps) => {
                                 className="fixed inset-0 z-10" 
                                 onClick={() => setShowMenu(false)}
                             ></div>
-                            <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-100 z-20 py-1">
+                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-20 py-1">
                                 <button 
                                     onClick={() => { setActiveModal('cotation'); setShowMenu(false); }}
                                     className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center"
                                 >
-                                    <span className="mr-2">📊</span> Fiche de Cotation Session
+                                    <span className="mr-2">📊</span> Cotation
                                 </button>
                                 <button 
                                     onClick={() => { setActiveModal('recours'); setShowMenu(false); }}
@@ -131,31 +133,34 @@ const Descripteur = ({ charge, onUpdate }: DescripteurProps) => {
                 </div>
             </div>
 
-            {/* Body */}
-            <div className="p-6 grid grid-cols-1 gap-4">
+            {/* Body Compact */}
+            <div className="p-3 space-y-2">
                 {sections.map((section) => (
                     <button
                         key={section.key}
                         onClick={() => handleOpenEditor(section.key)}
-                        className="flex flex-col items-start p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all group text-left h-full"
+                        className="flex items-center w-full p-2 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all group text-left"
                     >
-                        <div className="flex items-center mb-2 w-full">
-                            <span className="text-2xl mr-3">{section.icon}</span>
-                            <span className="font-semibold text-gray-900 group-hover:text-blue-700">
+                        <span className="text-lg mr-3 flex-shrink-0">{section.icon}</span>
+                        <div className="min-w-0 flex-1">
+                            <span className="block text-sm font-semibold text-gray-900 group-hover:text-blue-700">
                                 {section.label}
                             </span>
+                            <p className="text-xs text-gray-500 truncate">
+                                {charge[section.key] ? charge[section.key].split('\n')[1]?.trim() || 'Défini' : 'Non défini'}
+                            </p>
                         </div>
-                        <p className="text-sm text-gray-500 line-clamp-3 w-full">
-                            {charge[section.key] ? charge[section.key].split('\n')[1]?.trim() || 'Cliquez pour définir...' : 'Non défini'}
-                        </p>
+                        <svg className="w-4 h-4 text-gray-300 group-hover:text-blue-400 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
                     </button>
                 ))}
             </div>
 
-            {/* Footer */}
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
-                <span className="text-sm text-gray-500">Statut de la charge :</span>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(charge.status)}`}>
+            {/* Footer Compact */}
+            <div className="px-4 py-2 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
+                <span className="text-xs text-gray-500">Statut :</span>
+                <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(charge.status)}`}>
                     {getStatusLabel(charge.status)}
                 </span>
             </div>
