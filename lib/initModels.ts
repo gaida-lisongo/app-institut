@@ -10,6 +10,10 @@ import Grade from '@/models/Grade';
 import Autorisation from '@/models/Autorisation';
 import Recharge from '@/models/Recharge';
 import { Semestre, Matiere, Unite } from '@/models/Semestre';
+import Transaction from '@/models/Transaction';
+import { Activity, Charge } from '@/models/Charge';
+import Questionnaire from '@/models/Questionnaire';
+import Commande from '@/models/Commande';
 
 // Fonction pour initialiser tous les modèles
 export const initializeModels = () => {
@@ -28,7 +32,12 @@ export const initializeModels = () => {
     Recharge,
     Semestre,
     Matiere,
-    Unite
+    Unite,
+    Transaction,
+    Activity,
+    Charge,
+    Questionnaire,
+    Commande
   ];
 
   models.forEach(model => {

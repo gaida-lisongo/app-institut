@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import ActivityTransactionWrapper from './ActivityTransactionWrapper';
-import ActivityActions from './ActivityActions';
 
 const ActivityDetailsPage = async ({ params }: { params: { slug: string } }) => {
     const { slug } = await params;
@@ -54,8 +53,6 @@ const ActivityDetailsPage = async ({ params }: { params: { slug: string } }) => 
     };
 
     const activityData = await fetchActivity(slug);
-
-    console.log('Fetched activity data:', activityData);
 
     return (
         <div className="p-6 bg-white rounded-lg shadow-md">
