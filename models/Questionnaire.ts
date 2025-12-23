@@ -22,11 +22,15 @@ export interface ITravailPratique extends Document {
 export interface IProjet extends Document {
     contexte: String;
     problematiques: {
+        id?: String;
         title: String;
-        description?: String;
-        filePath?: String;
+        description: String;
+        attachedFile?: {
+            name: String;
+            url: String;
+            type: String;
+        };
     }[];
-    typeFile?: String;
 }
 
 export interface IQCM extends Document {
@@ -76,13 +80,17 @@ const QuestionnaireSchema = new Schema<IQuestionnaire>({
         }]
     },
     projet: {
-        contexte: { type: String },
+        contexte: { type: String, required: true },
         problematiques: [{
-            title: { type: String },
-            description: { type: String },
-            filePath: { type: String }
-        }],
-        typeFile: { type: String }
+            id: { type: String },
+            title: { type: String, required: true },
+            description: { type: String, required: true },
+            attachedFile: {
+                name: { type: String },
+                url: { type: String },
+                type: { type: String }
+            }
+        }]
     },
     qcm: {
         questions: [{
