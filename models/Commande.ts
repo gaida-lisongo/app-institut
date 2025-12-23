@@ -3,6 +3,7 @@ import Parcours from "./Parcours";
 
 export interface ICommande extends Document {
     etudiantId: mongoose.Types.ObjectId;
+    transaction?: mongoose.Types.ObjectId;
     promotionId: mongoose.Types.ObjectId;
     anneeId: mongoose.Types.ObjectId;
     montant: Number;
@@ -12,6 +13,7 @@ export interface ICommande extends Document {
 
 const CommandeSchema = new Schema<ICommande>({
     etudiantId: { type: Schema.Types.ObjectId, ref: 'Etudiant', required: true },
+    transaction: { type: Schema.Types.ObjectId, ref: 'Transaction' },
     promotionId: { type: Schema.Types.ObjectId, ref: 'Promotion', required: true },
     anneeId: { type: Schema.Types.ObjectId, ref: 'Annee', required: true },
     produit: String,

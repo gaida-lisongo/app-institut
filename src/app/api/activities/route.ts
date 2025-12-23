@@ -3,6 +3,7 @@ import dbConnect from '@/lib/dbConnect';
 import { initializeModels } from '@/lib/initModels';
 import { Activity, Charge } from '@/models/Charge';
 import mongoose from 'mongoose';
+import path from 'path';
 
 // GET - Récupérer les activités
 export async function GET(request: NextRequest) {
@@ -14,6 +15,7 @@ export async function GET(request: NextRequest) {
     const id = searchParams.get('id');
     const chargeId = searchParams.get('chargeId');
 
+    console.log('API activities GET called with id:', id, 'and chargeId:', chargeId); 
     // Récupérer une activité spécifique
     if (id) {
       if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -24,7 +26,20 @@ export async function GET(request: NextRequest) {
       }
 
       const activity = await Activity.findById(id)
-        .populate('resolutions.student', 'nom prenom matricule');
+        .populate('resolutions.student', 'nom prenom matricule')
+        .populate({
+          path: 'transaction',
+          populate: [
+            {
+              path: 'agentId',
+              select: 'nom prenom email telephone'
+            },
+            {
+              path: 'subscriptions.student',
+              select: 'nom prenom numero matricule'
+            }
+          ]
+        });
 
       if (!activity) {
         return NextResponse.json(
@@ -32,6 +47,8 @@ export async function GET(request: NextRequest) {
           { status: 404 }
         );
       }
+
+      console.log('Fetched activity data:', JSON.stringify(activity, null, 2));
 
       return NextResponse.json({
         success: true,
@@ -51,10 +68,25 @@ export async function GET(request: NextRequest) {
       const charge = await Charge.findById(chargeId)
         .populate({
           path: 'activities',
-          populate: {
-            path: 'resolutions.student',
-            select: 'nom prenom matricule'
-          }
+          populate: [
+            {
+              path: 'resolutions.student',
+              select: 'nom prenom matricule'
+            },
+            {
+              path: 'transaction',
+              populate: [
+                {
+                  path: 'agentId',
+                  select: 'nom prenom email telephone'
+                },
+                {
+                  path: 'subscriptions.student',
+                  select: 'nom prenom numero matricule'
+                }
+              ]
+            }
+          ]
         });
 
       if (!charge) {
@@ -74,6 +106,19 @@ export async function GET(request: NextRequest) {
     // Récupérer toutes les activités
     const activities = await Activity.find()
       .populate('resolutions.student', 'nom prenom matricule')
+      .populate({
+        path: 'transaction',
+        populate: [
+          {
+            path: 'agentId',
+            select: 'nom prenom email telephone'
+          },
+          {
+            path: 'subscriptions.student',
+            select: 'nom prenom numero matricule'
+          }
+        ]
+      })
       .sort({ createdAt: -1 });
 
     return NextResponse.json({

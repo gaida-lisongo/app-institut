@@ -3,6 +3,7 @@ import mongoose, { Document, Schema, Model } from 'mongoose';
 // Interface pour un document Activity
 export interface IActivity extends Document {
     title: String;
+    transaction?: mongoose.Types.ObjectId;
     description: String;
     type: String;
     status: String;
@@ -18,6 +19,7 @@ export interface IActivity extends Document {
 
 export interface IResource extends Document {
     title: String;
+    transaction?: mongoose.Types.ObjectId;
     url: String;
     montant: Number;
     description?: String;
@@ -28,6 +30,7 @@ export interface IResource extends Document {
 
 export interface IRecours extends Document {
     student: mongoose.Types.ObjectId;
+    transaction?: mongoose.Types.ObjectId;
     object: String;
     description?: String;
     status: String;
@@ -38,6 +41,7 @@ export interface IRecours extends Document {
 
 export interface ISeance extends Document {
     date: Date;
+    transaction?: mongoose.Types.ObjectId;
     startTime: String;
     endTime: String;
     topic: String;
@@ -56,6 +60,7 @@ export interface ISeance extends Document {
 // Interface pour un document Charge
 export interface ICharge extends Document {
     cours: mongoose.Types.ObjectId;
+    transaction?: mongoose.Types.ObjectId;
     enseignant: mongoose.Types.ObjectId;
     anneeId: mongoose.Types.ObjectId;
     promotionId: mongoose.Types.ObjectId;
@@ -82,6 +87,7 @@ export interface ICharge extends Document {
 // Schéma Mongoose pour les activités
 const ActivitySchema: Schema = new Schema({
     title: { type: String, required: true },
+    transaction: { type: mongoose.Schema.Types.ObjectId, ref: 'Transaction' },
     description: { type: String },
     type: { type: String, required: true },
     status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
@@ -98,6 +104,7 @@ const ActivitySchema: Schema = new Schema({
 // Schéma Mongoose pour les ressources
 const ResourceSchema: Schema = new Schema({
     title: { type: String, required: true },
+    transaction: { type: mongoose.Schema.Types.ObjectId, ref: 'Transaction' },
     url: { type: String, required: true },
     montant: { type: Number, required: true },
     description: { type: String },
@@ -110,6 +117,7 @@ const ResourceSchema: Schema = new Schema({
 const RecoursSchema: Schema = new Schema({
     student: { type: Schema.Types.ObjectId, ref: 'Etudiant', required: true },
     object: { type: String, required: true },
+    transaction: { type: mongoose.Schema.Types.ObjectId, ref: 'Transaction' },
     description: { type: String },
     status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
     preuves: [{ type: String }]
@@ -121,6 +129,7 @@ const RecoursSchema: Schema = new Schema({
 const SeanceSchema: Schema = new Schema({
     date: { type: Date, required: true },
     startTime: { type: String, required: true },
+    transaction: { type: mongoose.Schema.Types.ObjectId, ref: 'Transaction' },
     endTime: { type: String, required: true },
     topic: { type: String, required: true },
     description: { type: String },
@@ -138,6 +147,7 @@ const SeanceSchema: Schema = new Schema({
 // Schéma Mongoose pour le modèle Charge
 const ChargeSchema: Schema = new Schema({
     cours: { type: Schema.Types.ObjectId, ref: 'Matiere', required: true },
+    transaction: { type: mongoose.Schema.Types.ObjectId, ref: 'Transaction' },
     anneeId: { type: Schema.Types.ObjectId, ref: 'Annee', required: true },
     promotionId: { type: Schema.Types.ObjectId, ref: 'Promotion' },
     enseignant: { type: Schema.Types.ObjectId, ref: 'Agent', required: true },
