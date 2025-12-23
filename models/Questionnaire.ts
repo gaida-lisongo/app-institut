@@ -6,13 +6,17 @@ export interface IDevoir extends Document {
 }
 
 export interface ITravailPratique extends Document {
-    questions: {
+    questionnaires: {
+        id?: String;
         title: String;
-        description?: String;
+        description: String;
         points: Number;
-        filePath?: String;
+        attachedFile?: {
+            name: String;
+            url: String;
+            type: String;
+        };
     }[];
-    typeFile?: String;
 }
 
 export interface IProjet extends Document {
@@ -42,7 +46,7 @@ export interface IQuestionnaire extends Document {
     dateRemise: Date;
     maximumScore: Number;
     devoir?: IDevoir;
-    travailPratique?: ITravailPratique;
+    tp?: ITravailPratique;
     projet?: IProjet;
     qcm?: IQCM;
     createdAt: Date;
@@ -58,14 +62,18 @@ const QuestionnaireSchema = new Schema<IQuestionnaire>({
         url: { type: String },
         typeFile: { type: String }
     },
-    travailPratique: {
-        questions: [{
-            title: { type: String },
-            description: { type: String },
-            points: { type: Number },
-            filePath: { type: String }
-        }],
-        typeFile: { type: String }
+    tp: {
+        questionnaires: [{
+            id: { type: String },
+            title: { type: String, required: true },
+            description: { type: String, required: true },
+            points: { type: Number, required: true },
+            attachedFile: {
+                name: { type: String },
+                url: { type: String },
+                type: { type: String }
+            }
+        }]
     },
     projet: {
         contexte: { type: String },

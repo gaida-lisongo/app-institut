@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
             dateRemise, 
             maximumScore, 
             devoir, 
-            travailPratique, 
+            tp, 
             projet, 
             qcm,
             status = 'pending'
@@ -170,9 +170,9 @@ export async function POST(request: NextRequest) {
         }
 
         // Validation du contenu (au moins un type de questionnaire doit être fourni)
-        if (!devoir && !travailPratique && !projet && !qcm) {
+        if (!devoir && !tp && !projet && !qcm) {
             return NextResponse.json(
-                { success: false, error: 'Au moins un type de questionnaire doit être fourni (devoir, travailPratique, projet, ou qcm)' },
+                { success: false, error: 'Au moins un type de questionnaire doit être fourni (devoir, tp, projet, ou qcm)' },
                 { status: 400 }
             );
         }
@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
 
         // Ajouter seulement les champs définis pour éviter les erreurs de validation
         if (devoir) questionnaireData.devoir = devoir;
-        if (travailPratique) questionnaireData.travailPratique = travailPratique;
+        if (tp) questionnaireData.tp = tp;
         if (projet) questionnaireData.projet = projet;
         if (qcm) questionnaireData.qcm = qcm;
 
@@ -245,7 +245,7 @@ export async function PUT(request: NextRequest) {
             dateRemise, 
             maximumScore, 
             devoir, 
-            travailPratique, 
+            tp, 
             projet, 
             qcm,
             status
@@ -266,7 +266,7 @@ export async function PUT(request: NextRequest) {
         if (maximumScore !== undefined) updateData.maximumScore = maximumScore;
         if (status !== undefined) updateData.status = status;
         if (devoir !== undefined) updateData.devoir = devoir;
-        if (travailPratique !== undefined) updateData.travailPratique = travailPratique;
+        if (tp !== undefined) updateData.tp = tp;
         if (projet !== undefined) updateData.projet = projet;
         if (qcm !== undefined) updateData.qcm = qcm;
 
