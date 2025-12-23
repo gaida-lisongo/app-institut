@@ -1,0 +1,27 @@
+/* Styles personnalisés pour MathEditor - Support multiligne */
+.math-editor-container .mq-editable-field.mq-math-mode {
+  display: block !important;
+  height: auto !important;
+  min-height: 80px;
+  padding: 10px;
+  border: none !important;
+  white-space: pre-wrap;
+}
+
+.math-editor-container .mq-editable-field .mq-root-block {
+  display: block !important;
+  white-space: pre-wrap;
+}
+
+.math-editor-container .mq-editable-field .mq-binary-operator {
+  margin: 0 5px;
+}
+
+.math-editor-container .mq-editable-field .mq-text-mode {
+  display: inline-block;
+}
+
+/* Support pour les retours à la ligne */
+.math-editor-container .mq-editable-field .mq-math-mode .mq-root-block {
+  line-height: 1.5;
+}

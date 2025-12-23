@@ -2,8 +2,9 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { EditableMathField, addStyles } from 'react-mathquill';
+import '@/styles/mathEditor.css';
 
-// Ajouter les styles CSS de MathQuill
+// Ajouter les styles CSS de MathQuill côté client seulement
 if (typeof window !== 'undefined') {
   addStyles();
 }
@@ -34,7 +35,7 @@ const mathSymbols: MathSymbol[] = [
   { symbol: '≠', latex: '\\neq', category: 'basic' },
   { symbol: '±', latex: '\\pm', category: 'basic' },
   { symbol: '␣', latex: '\\ ', category: 'basic' }, // Espace
-  { symbol: '⏎', latex: '\\\\', category: 'basic' }, // Retour à la ligne
+  { symbol: '⏎', latex: 'Enter', category: 'basic' }, // Retour à la ligne
   
   // Fractions et exposants
   { symbol: 'x²', latex: '^{2}', category: 'power' },
@@ -132,12 +133,17 @@ export const MathEditor: React.FC<MathEditorProps> = ({
   const insertSymbol = (latexCode: string) => {
     try {
       if (mathFieldRef.current) {
-        // Ajouter un espace avant le symbole si nécessaire
-        const currentLatex = mathFieldRef.current.latex();
-        if (currentLatex && !currentLatex.endsWith(' ') && !currentLatex.endsWith('{')) {
-          mathFieldRef.current.write(' ');
+        // Cas spécial pour le retour à la ligne
+        if (latexCode === 'Enter') {
+          mathFieldRef.current.write('\\\\');
+        } else {
+          // Ajouter un espace avant le symbole si nécessaire
+          const currentLatex = mathFieldRef.current.latex();
+          if (currentLatex && !currentLatex.endsWith(' ') && !currentLatex.endsWith('{') && !latexCode.startsWith('\\')) {
+            mathFieldRef.current.write(' ');
+          }
+          mathFieldRef.current.write(latexCode);
         }
-        mathFieldRef.current.write(latexCode);
         mathFieldRef.current.focus();
       }
     } catch (error) {
@@ -162,7 +168,7 @@ export const MathEditor: React.FC<MathEditorProps> = ({
   const filteredSymbols = mathSymbols.filter(s => s.category === activeCategory);
 
   return (
-    <div className={`math-editor ${className}`}>
+    <div className={`math-editor math-editor-container ${className}`}>
       {label && (
         <label className="block text-sm font-medium text-gray-700 mb-2">
           {label}
@@ -242,8 +248,7 @@ export const MathEditor: React.FC<MathEditorProps> = ({
                 <EditableMathField
                   latex={latex}
                   config={{
-                    readOnly: true,
-                    staticMath: true
+                    restrictMismatchedBrackets: true
                   }}
                 />
               ) : (
@@ -257,16 +262,19 @@ export const MathEditor: React.FC<MathEditorProps> = ({
               mathquillDidMount={(mathField) => {
                 mathFieldRef.current = mathField;
                 
-                // Gestion personnalisée des touches
-                mathField.__controller.container.addEventListener('keydown', (e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    mathField.write('\\\\'); // Double backslash pour retour à la ligne
-                  } else if (e.key === ' ' && !e.shiftKey) {
-                    e.preventDefault();
-                    mathField.write('\\ '); // Espace LaTeX
-                  }
-                });
+                // Gestion personnalisée des touches via l'élément DOM
+                const element = mathField.el();
+                if (element) {
+                  element.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      mathField.write('\\\\');
+                    } else if (e.key === ' ' && !e.shiftKey) {
+                      e.preventDefault();
+                      mathField.write('\\ '); // Espace LaTeX
+                    }
+                  });
+                }
               }}
               config={{
                 spaceBehavesLikeTab: false,
