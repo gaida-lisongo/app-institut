@@ -12,7 +12,7 @@ export interface IActivity extends Document {
         student: mongoose.Types.ObjectId;
         score: Number;
         dateSubmitted: Date;
-    }
+    }[];
     createdAt: Date;
     updatedAt: Date;
 }

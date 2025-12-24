@@ -29,16 +29,45 @@ export async function GET(request: NextRequest) {
         cours: coursId, 
         anneeId: anneeId 
       })
+      .populate({
+        path: 'transaction',
+        populate: [
+          {
+            path: 'agentId',
+            select: 'nom prenom email telephone'
+          },
+          {
+            path: 'subscriptions.student',
+            select: 'nom prenom numero matricule'
+          }
+        ]
+      })
       .populate('cours')
       .populate('enseignant')
       .populate('anneeId')
       .populate('promotionId')
       .populate({
         path: 'activities',
-        populate: {
-          path: 'resolutions.student',
-          model: 'Etudiant'
-        }
+        populate: [
+          {
+            path: 'resolutions.student',
+            model: 'Etudiant'
+          },
+          {
+            path: 'transaction',
+            model: 'Transaction',
+            populate: [
+              {
+                path: 'agentId',
+                select: 'nom prenom email telephone'
+              },
+              {
+                path: 'subscriptions.student',
+                select: 'nom prenom numero matricule'
+              }
+            ]
+          }
+        ]
       })
       .populate({
         path: 'ressources',
@@ -88,10 +117,26 @@ export async function GET(request: NextRequest) {
           .populate('anneeId')
           .populate({
             path: 'activities',
-            populate: {
-              path: 'resolutions.student',
-              model: 'Etudiant'
-            }
+            populate: [
+              {
+                path: 'resolutions.student',
+                model: 'Etudiant'
+              },
+              {
+                path: 'transaction',
+                model: 'Transaction',
+                populate: [
+                  {
+                    path: 'agentId',
+                    select: 'nom prenom email telephone'
+                  },
+                  {
+                    path: 'subscriptions.student',
+                    select: 'nom prenom numero matricule'
+                  }
+                ]
+              }
+            ]
           })
           .populate({
             path: 'ressources',
@@ -134,6 +179,29 @@ export async function GET(request: NextRequest) {
         .populate('enseignant')
         .populate('anneeId')
         .populate('promotionId')
+        .populate({
+          path: 'activities',
+          populate: [
+            {
+              path: 'resolutions.student',
+              model: 'Etudiant'
+            },
+            {
+              path: 'transaction',
+              model: 'Transaction',
+              populate: [
+                {
+                  path: 'agentId',
+                  select: 'nom prenom email telephone'
+                },
+                {
+                  path: 'subscriptions.student',
+                  select: 'nom prenom numero matricule'
+                }
+              ]
+            }
+          ]
+        })
         .sort({ createdAt: -1 });
 
       return NextResponse.json({

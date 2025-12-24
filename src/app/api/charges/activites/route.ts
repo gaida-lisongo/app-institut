@@ -174,6 +174,90 @@ export async function PUT(request: NextRequest) {
   }
 }
 
+// PATCH - Ajouter une résolution à une activité
+export async function PATCH(request: NextRequest) {
+  try {
+    await dbConnect();
+    await initializeModels();
+
+    const body = await request.json();
+    const {
+      activityId,
+      studentId,
+      score
+    } = body;
+
+    if (!activityId || !studentId || score === undefined) {
+      return NextResponse.json(
+        { success: false, error: 'activityId, studentId et score sont requis' },
+        { status: 400 }
+      );
+    }
+
+    // Validation des IDs
+    if (!mongoose.Types.ObjectId.isValid(activityId) || !mongoose.Types.ObjectId.isValid(studentId)) {
+      return NextResponse.json(
+        { success: false, error: 'IDs invalides' },
+        { status: 400 }
+      );
+    }
+
+    // Trouver l'activité
+    const activity = await Activity.findById(activityId);
+    if (!activity) {
+      return NextResponse.json(
+        { success: false, error: 'Activité non trouvée' },
+        { status: 404 }
+      );
+    }
+
+    // Validation du score
+    if (typeof score !== 'number' || score < 0 || score > Number(activity.maximumScore)) {
+      return NextResponse.json(
+        { success: false, error: `Le score doit être un nombre entre 0 et ${activity.maximumScore}` },
+        { status: 400 }
+      );
+    }
+
+    // Vérifier si l'étudiant a déjà une résolution pour cette activité
+    const existingResolutionIndex = activity.resolutions.findIndex(
+      resolution => resolution.student.toString() === studentId
+    );
+
+    if (existingResolutionIndex !== -1) {
+      // Mettre à jour la résolution existante
+      activity.resolutions[existingResolutionIndex].score = score;
+      activity.resolutions[existingResolutionIndex].dateSubmitted = new Date();
+    } else {
+      // Ajouter une nouvelle résolution
+      activity.resolutions.push({
+        student: new mongoose.Types.ObjectId(studentId),
+        score,
+        dateSubmitted: new Date()
+      });
+    }
+
+    // Sauvegarder l'activité
+    const savedActivity = await activity.save();
+
+    // Peupler les données pour la réponse
+    const populatedActivity = await Activity.findById(activityId)
+      .populate('resolutions.student');
+
+    return NextResponse.json({
+      success: true,
+      data: populatedActivity,
+      message: existingResolutionIndex !== -1 ? 'Résolution mise à jour avec succès' : 'Résolution ajoutée avec succès'
+    });
+  } catch (error) {
+    console.error('Erreur API charges PATCH:', error);
+    return NextResponse.json(
+      { success: false, error: 'Erreur interne du serveur' },
+      { status: 500 }
+    );
+  }
+}
+
 // DELETE - Supprimer une charge horaire
 export async function DELETE(request: NextRequest) {
   try {

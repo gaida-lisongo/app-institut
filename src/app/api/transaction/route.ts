@@ -6,6 +6,8 @@ import Transaction from '@/models/Transaction';
 import Parcours from '@/models/Parcours';
 import { Activity, Recours, Resource } from '@/models/Charge';
 import Commandes from '@/models/Commande';
+import Etudiant from '@/models/Etudiant';
+import Agent from '@/models/Agent';
 
 //Créate a new transaction
 export async function POST(request: NextRequest) {
@@ -238,6 +240,148 @@ export async function PUT(request: NextRequest) {
             },
             { status: 500 }
         );
+    }
+}
+
+//Create new subscription for a transaction PATCH
+export async function PATCH(request: NextRequest) {
+    try {
+        await dbConnect();
+        await initializeModels();
+        const body = await request.json();
+        const { transactionId, studentId } = body;
+
+        // Validation des champs requis
+        if(!transactionId || !studentId){
+            return NextResponse.json({
+                success: false, 
+                error: "Missing required fields: transactionId and studentId are required"
+            }, {status: 400});
+        }
+
+        // Validation du format des IDs
+        if (!mongoose.Types.ObjectId.isValid(transactionId) || !mongoose.Types.ObjectId.isValid(studentId)) {
+            return NextResponse.json({
+                success: false, 
+                error: "Invalid ID format"
+            }, {status: 400});
+        }
+
+        // Vérifier si l'étudiant existe
+        const studentData = await Etudiant.findById(studentId);
+        if(!studentData){
+            return NextResponse.json({
+                success: false, 
+                error: "Student not found"
+            }, {status: 404});
+        }
+
+        // Vérifier si la transaction existe
+        const transaction = await Transaction.findById(transactionId);
+        if(!transaction){
+            return NextResponse.json({
+                success: false, 
+                error: "Transaction not found"
+            }, {status: 404});
+        }
+
+        // Vérifier si l'étudiant n'est pas déjà inscrit à cette transaction
+        const existingSubscription = transaction.subscriptions?.find(
+            (sub: any) => sub.student.toString() === studentId
+        );
+        
+        if(existingSubscription){
+            return NextResponse.json({
+                success: false, 
+                error: "Student is already subscribed to this transaction"
+            }, {status: 409});
+        }
+
+        const lastSolde = studentData.solde || 0;
+        const transactionAmount = transaction.amount || 0;
+
+        // Vérifier si l'étudiant a suffisamment de solde
+        if(lastSolde < transactionAmount){
+            return NextResponse.json({
+                success: false, 
+                error: `Insufficient balance. Current: ${lastSolde}, Required: ${transactionAmount}`
+            }, {status: 400});
+        }
+
+        const newSolde = lastSolde - transactionAmount;
+
+        // Utiliser une transaction MongoDB pour assurer la cohérence
+        const session = await mongoose.startSession();
+        session.startTransaction();
+
+        try {
+            // Update student solde
+            await Etudiant.findByIdAndUpdate(
+                studentId, 
+                { solde: newSolde },
+                { session }
+            );
+
+            // Create subscription object
+            const newSubscription = {
+                student: new mongoose.Types.ObjectId(studentId),
+                lastSolde: lastSolde,
+                newSolde: newSolde,
+                subscribedAt: new Date()
+            };
+
+            // Add subscription to transaction
+            await Transaction.findByIdAndUpdate(
+                transactionId,
+                { 
+                    $push: { subscriptions: newSubscription },
+                    $set: { updatedAt: new Date() }
+                },
+                { session }
+            );
+            
+            //Credit solde of agent of trasaction.agentId
+            await Agent.findByIdAndUpdate(
+                transaction.agentId, 
+                { $inc: { solde: transactionAmount } },
+                { session }
+            );
+
+            // Commit the transaction
+            await session.commitTransaction();
+
+            // Récupérer la transaction mise à jour avec les détails populés
+            const updatedTransaction = await Transaction.findById(transactionId)
+                .populate('agentId', 'nom prenom email')
+                .populate({
+                    path: 'subscriptions.student',
+                    select: 'nom prenom numero matricule'
+                });
+
+            return NextResponse.json({
+                success: true, 
+                data: {
+                    subscription: newSubscription,
+                    transaction: updatedTransaction,
+                    message: "Student successfully subscribed to transaction"
+                }
+            }, {status: 200});
+
+        } catch (sessionError) {
+            // Rollback the transaction
+            await session.abortTransaction();
+            throw sessionError;
+        } finally {
+            // End the session
+            session.endSession();
+        }
+
+    } catch (error) {
+        console.error('PATCH transaction error:', error);
+        return NextResponse.json({
+            success: false, 
+            error: error instanceof Error ? error.message : 'An unknown error occurred'
+        }, {status: 500});
     }
 }
 

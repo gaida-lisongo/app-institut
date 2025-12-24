@@ -11,7 +11,8 @@ export interface IAgent extends Document {
   secure: string;
   sexe: 'M' | 'F';
   email?: string;
-  telephone?: string
+  telephone?: string;
+  solde: number;
 }
 
 export interface AgentData {
@@ -24,7 +25,8 @@ export interface AgentData {
   secure: string;
   sexe: 'M' | 'F';
   email?: string;
-  telephone?: string
+  telephone?: string;
+  solde: number;
 }
 
 export interface CreateAgentData {
@@ -90,6 +92,11 @@ const AgentSchema: Schema = new Schema({
     required: false,
     maxlength: [60, 'Le telephone ne peut pas dépasser 60 caractères.'],
   },
+  solde: {
+    type: Number,
+    required: [true, 'Veuillez ajouter un solde.'],
+    default: 0,
+  }
 }, {
     timestamps: true // Ajoute `createdAt` et `updatedAt` automatiquement
 });
