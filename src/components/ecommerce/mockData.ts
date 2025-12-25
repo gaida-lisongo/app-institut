@@ -19,5 +19,35 @@ export const mockEcommerceData = {
     { yearId: "2024-2025", month: "Oct", totalSales: 320 },
     { yearId: "2024-2025", month: "Nov", totalSales: 280 },
     { yearId: "2024-2025", month: "Dec", totalSales: 190 }
+  ],
+
+  targetYears: [
+    {
+      _id: "2024-2025",
+      totalTarget: 5000,
+      amountSpent: 4635,
+      totalTargetOK: 3500,
+      totalTargetPending: 365,
+      totalTargetMissed: 1135,
+      designation: "2024-2025"
+    },
+    {
+      _id: "2023-2024", 
+      totalTarget: 4800,
+      amountSpent: 4250,
+      totalTargetOK: 3200,
+      totalTargetPending: 550,
+      totalTargetMissed: 1050,
+      designation: "2023-2024"
+    },
+    {
+      _id: "2022-2023",
+      totalTarget: 4500,
+      amountSpent: 3890,
+      totalTargetOK: 2900,
+      totalTargetPending: 990,
+      totalTargetMissed: 610,
+      designation: "2022-2023"
+    }
   ]
 };

@@ -5,16 +5,49 @@ import { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { MoreDotIcon } from "@/icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
+
+interface TargetYear {
+  _id: string;
+  totalTarget: number;
+  amountSpent: number;
+  totalTargetOK: number;
+  totalTargetPending: number;
+  totalTargetMissed: number;
+  designation: string;
+}
+
+interface MonthlyTargetProps {
+  years: TargetYear[];
+}
+
 // Dynamically import the ReactApexChart component
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
 });
 
-export default function MonthlyTarget() {
-  const series = [75.55];
-  const options: ApexOptions = {
+export default function MonthlyTarget({ years }: MonthlyTargetProps) {
+  const [currentYear, setCurrentYear] = useState<TargetYear>(years[0] || {});
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Fonction pour calculer le pourcentage
+  const calculatePercentage = (year: TargetYear) => {
+    if (!year || !year.totalTarget || year.totalTarget === 0) return 0;
+    return Math.round((year.totalTargetOK / year.totalTarget) * 100);
+  };
+
+  // State pour la série du graphique
+  const [chartSeries, setChartSeries] = useState<number[]>([calculatePercentage(years[0] || {})]);
+
+  // Mettre à jour le graphique quand l'année change
+  useEffect(() => {
+    const newPercentage = calculatePercentage(currentYear);
+    setChartSeries([newPercentage]);
+  }, [currentYear]);
+
+  // Options du graphique - mises à jour dynamiquement
+  const chartOptions: ApexOptions = {
     colors: ["#465FFF"],
     chart: {
       fontFamily: "Outfit, sans-serif",
@@ -23,6 +56,18 @@ export default function MonthlyTarget() {
       sparkline: {
         enabled: true,
       },
+      animations: {
+        enabled: true,
+        speed: 800,
+        animateGradually: {
+          enabled: true,
+          delay: 150
+        },
+        dynamicAnimation: {
+          enabled: true,
+          speed: 350
+        }
+      }
     },
     plotOptions: {
       radialBar: {
@@ -62,8 +107,6 @@ export default function MonthlyTarget() {
     labels: ["Progress"],
   };
 
-  const [isOpen, setIsOpen] = useState(false);
-
   function toggleDropdown() {
     setIsOpen(!isOpen);
   }
@@ -78,10 +121,10 @@ export default function MonthlyTarget() {
         <div className="flex justify-between">
           <div>
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-              Monthly Target
+              Dépenses Annuel
             </h3>
             <p className="mt-1 font-normal text-gray-500 text-theme-sm dark:text-gray-400">
-              Target you’ve set for each month
+              {currentYear.designation}
             </p>
           </div>
           <div className="relative inline-block">
@@ -93,50 +136,52 @@ export default function MonthlyTarget() {
               onClose={closeDropdown}
               className="w-40 p-2"
             >
-              <DropdownItem
-                tag="a"
-                onItemClick={closeDropdown}
-                className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
-              >
-                View More
-              </DropdownItem>
-              <DropdownItem
-                tag="a"
-                onItemClick={closeDropdown}
-                className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
-              >
-                Delete
-              </DropdownItem>
+              {years.map((year) => (
+                <DropdownItem
+                  key={year._id}
+                  onClick={() => {
+                    setCurrentYear(year);
+                    closeDropdown();
+                  }}
+                >
+                  <div className="flex flex-col">
+                    <span className="font-medium">{year.designation}</span>
+                    <span className="text-xs text-gray-500">
+                      Target: {year.totalTarget}
+                    </span>
+                  </div>
+                </DropdownItem>
+              ))}
             </Dropdown>
           </div>
         </div>
         <div className="relative ">
           <div className="max-h-[330px]">
             <ReactApexChart
-              options={options}
-              series={series}
+              options={chartOptions}
+              series={chartSeries}
               type="radialBar"
               height={330}
+              key={currentYear._id} // Force re-render when year changes
             />
           </div>
 
           <span className="absolute left-1/2 top-full -translate-x-1/2 -translate-y-[95%] rounded-full bg-success-50 px-3 py-1 text-xs font-medium text-success-600 dark:bg-success-500/15 dark:text-success-500">
-            +10%
+            {currentYear.totalTargetOK || 0}
           </span>
         </div>
         <p className="mx-auto mt-10 w-full max-w-[380px] text-center text-sm text-gray-500 sm:text-base">
-          You earn $3287 today, it&apos;s higher than last month. Keep up your
-          good work!
+          Vous avez atteint {currentYear.amountSpent || 0} de dépenses pour cette année.          
         </p>
       </div>
 
       <div className="flex items-center justify-center gap-5 px-6 py-3.5 sm:gap-8 sm:py-5">
         <div>
           <p className="mb-1 text-center text-gray-500 text-theme-xs dark:text-gray-400 sm:text-sm">
-            Target
+            Total Dépenses
           </p>
           <p className="flex items-center justify-center gap-1 text-base font-semibold text-gray-800 dark:text-white/90 sm:text-lg">
-            $20K
+            {currentYear.totalTarget}
             <svg
               width="16"
               height="16"
@@ -158,10 +203,10 @@ export default function MonthlyTarget() {
 
         <div>
           <p className="mb-1 text-center text-gray-500 text-theme-xs dark:text-gray-400 sm:text-sm">
-            Revenue
+            Complété
           </p>
           <p className="flex items-center justify-center gap-1 text-base font-semibold text-gray-800 dark:text-white/90 sm:text-lg">
-            $20K
+            {currentYear.totalTargetOK}
             <svg
               width="16"
               height="16"
@@ -183,10 +228,10 @@ export default function MonthlyTarget() {
 
         <div>
           <p className="mb-1 text-center text-gray-500 text-theme-xs dark:text-gray-400 sm:text-sm">
-            Today
+            En cours
           </p>
           <p className="flex items-center justify-center gap-1 text-base font-semibold text-gray-800 dark:text-white/90 sm:text-lg">
-            $20K
+            {currentYear.totalTargetPending}
             <svg
               width="16"
               height="16"
@@ -198,7 +243,7 @@ export default function MonthlyTarget() {
                 fillRule="evenodd"
                 clipRule="evenodd"
                 d="M7.60141 2.33683C7.73885 2.18084 7.9401 2.08243 8.16435 2.08243C8.16475 2.08243 8.16516 2.08243 8.16556 2.08243C8.35773 2.08219 8.54998 2.15535 8.69664 2.30191L12.6968 6.29924C12.9898 6.59203 12.9899 7.0669 12.6971 7.3599C12.4044 7.6529 11.9295 7.65306 11.6365 7.36027L8.91435 4.64004L8.91435 13.5C8.91435 13.9142 8.57856 14.25 8.16435 14.25C7.75013 14.25 7.41435 13.9142 7.41435 13.5L7.41435 4.64442L4.69679 7.36025C4.4038 7.65305 3.92893 7.6529 3.63613 7.35992C3.34333 7.06693 3.34348 6.59206 3.63646 6.29926L7.60141 2.33683Z"
-                fill="#039855"
+                fill="#989503ff"
               />
             </svg>
           </p>
