@@ -9,6 +9,7 @@ import DemographicCard from "@/components/ecommerce/DemographicCard";
 import AuthStatus from "@/components/auth/AuthStatus";
 import UserProfile from "@/components/user/UserProfile";
 import EcommerceMetrics from "@/components/ecommerce/EcommerceMetrics";
+import { mockEcommerceData } from "@/components/ecommerce/mockData";
 
 export const metadata: Metadata = {
   title: "Dashboard Admin | Système de Gestion",
@@ -25,9 +26,15 @@ export default function Ecommerce() {
         <UserProfile />
       </div>
       <div className="col-span-12 space-y-6 xl:col-span-7">
-        <EcommerceMetrics />
+        <EcommerceMetrics
+          recettesMetrics={{ totalTransactions: 100, amountCollected: 5000 }}
+          depensesMetrics={{ totalTransactions: 50, amountSpent: 3000 }}
+        />
 
-        <MonthlySalesChart />
+        <MonthlySalesChart 
+          years={mockEcommerceData.years}
+          chartData={mockEcommerceData.chartData}
+        />
       </div>
 
       <div className="col-span-12 xl:col-span-5">
