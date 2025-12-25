@@ -2,22 +2,38 @@ import dbConnect from '@/lib/dbConnect';
 import Agent, { IAgent, AgentData, CreateAgentData } from '@/models/Agent';
 import Grade from '@/models/Grade';
 import Autorisation from '@/models/Autorisation';
+import { initializeModels } from '@/lib/initModels';
+import crypto from 'crypto';
 
 class AgentController {
-    //constructor
-    constructor() {
-        dbConnect()
-            .then(() => {
-                console.log('Connected to MongoDB');
-            })
-            .catch((error) => {
-                console.error('Error connecting to MongoDB:', error);
-            });
+    //create agent
+    async createAgent(agentData: CreateAgentData) {
+        try {
+            await dbConnect();
+            await initializeModels();
+            
+            // Nettoyer les chaînes vides
+            const cleanedData = {
+                ...agentData,
+                email: agentData.email === '' ? undefined : agentData.email,
+                telephone: agentData.telephone === '' ? undefined : agentData.telephone,
+                prenom: agentData.prenom === '' ? undefined : agentData.prenom,
+                // Crypter le secure
+                secure: crypto.createHash('sha256').update(agentData.secure).digest('hex')
+            };
+            
+            const newAgent = await Agent.create(cleanedData);
+            return newAgent;
+        } catch (error) {
+            console.error('Error creating agent:', error);
+            throw error;
+        }
     }
-
     //login agent By _id
     async loginAgentById(id: string) {
         try {
+            await dbConnect();
+            await initializeModels();
             const agent = await Agent.findById(id).populate('grade');
             const autorisations : any[] = []
             const autData = await Autorisation.find({ agents: id });
@@ -39,6 +55,8 @@ class AgentController {
     //get all agents
     async getAllAgents() {
         try {
+            await dbConnect();
+            await initializeModels();
             const agents = await Agent.find().populate('grade');
             return agents;
         } catch (error) {
@@ -50,6 +68,8 @@ class AgentController {
     //get agents by code of grade
     async getAgentsByGradeCode(code: string) {
         try {
+            await dbConnect();
+            await initializeModels();
             // First find the grade by code
             const grade = await Grade.findOne({ code });
             if (!grade) {
@@ -66,19 +86,11 @@ class AgentController {
     }
     
 
-    //create agent
-    async createAgent(agent: CreateAgentData) {
-        try {
-            const newAgent = await Agent.create(agent);
-            return newAgent;
-        } catch (error) {
-            console.error('Error creating agent:', error);
-            throw error;
-        }
-    }
     //update agent
     async updateAgent(id: string, agent: Partial<CreateAgentData>) {
         try {
+            await dbConnect();
+            await initializeModels();
             const updatedAgent = await Agent.findByIdAndUpdate(id, agent, { new: true });
             return updatedAgent;
         } catch (error) {
@@ -90,6 +102,8 @@ class AgentController {
     //delete agent
     async deleteAgent(id: string) {
         try {
+            await dbConnect();
+            await initializeModels();
             const deletedAgent = await Agent.findByIdAndDelete(id);
             return deletedAgent;
         } catch (error) {

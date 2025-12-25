@@ -1,20 +1,22 @@
-import AgentControllers from '@/lib/controllers/AgentControllers';
+import AgentController from '@/lib/controllers/AgentControllers';
 import { NextRequest, NextResponse } from 'next/server';
 import { IAgent, AgentData, CreateAgentData } from '@/models/Agent';
+import { initializeModels } from '@/lib/initModels';
 
 // GET /api/agents?grade=<code> - Récupérer les agents d'un type spécifique
 export async function GET(request: NextRequest) {
     try {
+        await initializeModels();
         const code = request.nextUrl.searchParams.get('grade');
 
         if (!code) {
-            const agents = await AgentControllers.getAllAgents();
+            const agents = await AgentController.getAllAgents();
             return NextResponse.json(
                 { success: true, data: agents },
                 { status: 200 }
             );
         } else {
-            const agents = await AgentControllers.getAgentsByGradeCode(code as string);
+            const agents = await AgentController.getAgentsByGradeCode(code as string);
             
             return NextResponse.json(
                 { success: true, data: agents },
@@ -33,8 +35,9 @@ export async function GET(request: NextRequest) {
 // POST /api/agents - Créer un nouveau agent
 export async function POST(request: NextRequest) {
     try {
+        await initializeModels();
         const body = await request.json();
-        const agent = await AgentControllers.createAgent(body as CreateAgentData);
+        const agent = await AgentController.createAgent(body as CreateAgentData);
         
         return NextResponse.json(
             { success: true, data: agent },
@@ -51,10 +54,11 @@ export async function POST(request: NextRequest) {
 // UPDATE /api/agents - Modifier un agent dont les infos sont portés dans le body
 export async function PUT(request: NextRequest) {
     try {
+        await initializeModels();
         const body = await request.json();
         console.log("body to update :", body);
         const { _id: id, ...updateData } = body;
-        const agent = await AgentControllers.updateAgent(id, updateData as Partial<CreateAgentData>);
+        const agent = await AgentController.updateAgent(id, updateData as Partial<CreateAgentData>);
         
         return NextResponse.json(
             { success: true, data: agent },
@@ -72,8 +76,9 @@ export async function PUT(request: NextRequest) {
 // DELETE /api/agents - Supprimer un agent dont l'id est porté dans le body
 export async function DELETE(request: NextRequest) {
     try {
+        await initializeModels();
         const body = await request.json();
-        const agent = await AgentControllers.deleteAgent(body.id);
+        const agent = await AgentController.deleteAgent(body.id);
         
         return NextResponse.json(
             { success: true, data: agent },
@@ -90,8 +95,9 @@ export async function DELETE(request: NextRequest) {
 //FETCH /api/agents/- Récupérer un agent spécifique, body : {id}
 export async function FETCH(request: NextRequest) {
     try {
+        await initializeModels();
         const body = await request.json();
-        const agent = await AgentControllers.loginAgentById(body.id);
+        const agent = await AgentController.loginAgentById(body.id);
         
         return NextResponse.json(
             { success: true, data: agent },

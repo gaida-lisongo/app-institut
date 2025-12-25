@@ -101,29 +101,6 @@ const AgentSchema: Schema = new Schema({
     timestamps: true // Ajoute `createdAt` et `updatedAt` automatiquement
 });
 
-// Middleware pour nettoyer les chaînes vides avant validation
-AgentSchema.pre('validate', function (next: any) {
-    // Convertir les chaînes vides en undefined pour les champs optionnels
-    if (this.email === '') {
-        this.email = undefined;
-    }
-    if (this.telephone === '') {
-        this.telephone = undefined;
-    }
-    if (this.prenom === '') {
-        this.prenom = undefined;
-    }
-    next();
-});
-
-//Middle ware save pour crypté secure en SHA256
-AgentSchema.pre('save', function (next : any) {
-    if (this.isModified('secure')) {
-        this.secure = crypto.createHash('sha256').update(this.secure as string).digest('hex');
-    }
-    next();
-});
-
 // 3. Exporter le Modèle Typé
 const Agent = (mongoose.models.Agent || mongoose.model<IAgent, AgentModel>('Agent', AgentSchema)) as AgentModel;
 

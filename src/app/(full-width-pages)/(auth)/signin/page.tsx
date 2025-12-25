@@ -7,7 +7,10 @@ import ChevronLeftIcon from '@/icons/chevron-left.svg';
 import { useAuthenticateAgent, useCheckAuth, useAuthLoading, useAuthError, useIsAuthenticated } from '@/store/useUserStore';
 
 export default function LoginPage() {
-  const [agentId, setAgentId] = useState('');
+  const [formData, setFormData] = useState({
+    matricule: '',
+    secure: ''
+  });
   const router = useRouter();
   const authenticateAgent = useAuthenticateAgent();
   const checkAuth = useCheckAuth();
@@ -28,16 +31,27 @@ export default function LoginPage() {
     handleCheckAuth();
   }, [handleCheckAuth]);
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!agentId.trim()) {
+    if (!formData.matricule.trim() || !formData.secure.trim()) {
       return;
     }
 
     try {
+      // Créer un identifiant combiné pour l'authentification
+      const agentId = `${formData.matricule.trim()}:${formData.secure}`;
+      
       // Utiliser l'action du store pour authentifier
-      const result = await authenticateAgent(agentId.trim());
+      const result = await authenticateAgent(agentId);
       
       if (result.success) {
         // Redirection vers le dashboard après authentification réussie et persistance
@@ -47,7 +61,7 @@ export default function LoginPage() {
     } catch (error) {
       console.error('Erreur de connexion:', error);
     }
-  }, [agentId, authenticateAgent, router]);
+  }, [formData, authenticateAgent, router]);
 
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full">
@@ -56,7 +70,7 @@ export default function LoginPage() {
           href="/"
           className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
-                    <ChevronLeftIcon />
+          <ChevronLeftIcon />
           Retour à l'accueil
         </Link>
       </div>
@@ -68,25 +82,42 @@ export default function LoginPage() {
               Connexion Agent
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Scannez votre QR code ou saisissez votre ID agent
+              Connectez-vous avec votre matricule et mot de passe
             </p>
           </div>
           
           <form onSubmit={handleSubmit}>
             <div className="space-y-6">
               <div>
-                <label htmlFor="agentId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  ID Agent <span className="text-red-500">*</span>
+                <label htmlFor="matricule" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Matricule <span className="text-red-500">*</span>
                 </label>
                 <input
-                  id="agentId"
-                  name="agentId"
+                  id="matricule"
+                  name="matricule"
                   type="text"
                   required
-                  value={agentId}
-                  onChange={(e) => setAgentId(e.target.value)}
+                  value={formData.matricule}
+                  onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                  placeholder="Saisissez votre ID agent"
+                  placeholder="Saisissez votre matricule"
+                  disabled={loading}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="secure" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Mot de passe <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="secure"
+                  name="secure"
+                  type="password"
+                  required
+                  value={formData.secure}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  placeholder="Saisissez votre mot de passe"
                   disabled={loading}
                 />
               </div>
@@ -102,7 +133,7 @@ export default function LoginPage() {
               <div>
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || !formData.matricule.trim() || !formData.secure.trim()}
                   className="w-full py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
                 >
                   {loading ? 'Connexion...' : 'Se connecter'}
@@ -111,9 +142,14 @@ export default function LoginPage() {
             </div>
           </form>
 
-          <div className="mt-6 text-center">
+          <div className="mt-6 text-center space-y-2">
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Vous pouvez également scanner votre QR code pour une connexion automatique
+              <Link href="/forgot" className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
+                Mot de passe oublié ?
+              </Link>
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Contactez l'administrateur si vous avez oublié vos identifiants
             </p>
           </div>
         </div>

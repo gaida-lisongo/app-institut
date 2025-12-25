@@ -14,7 +14,55 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Récupérer l'agent et ses autorisations
+    // Vérifier si c'est un format matricule:password
+    if (agentId.includes(':')) {
+      const [matricule, secure] = agentId.split(':');
+      
+      // Faire l'appel vers l'endpoint externe
+      const externalResponse = await fetch('http://localhost:3001/api/v1/agents/auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ matricule, secure }),
+      });
+
+      const externalData = await externalResponse.json();
+
+      if (externalResponse.ok && externalData.success) {
+        // Utiliser les données de l'endpoint externe
+        const response = NextResponse.json(
+          { 
+            success: true, 
+            data: {
+              agent: externalData.data.agent,
+              autorisations: externalData.data.autorisations,
+              token: externalData.data.token
+            }
+          },
+          { status: 200 }
+        );
+
+        // Définir le cookie d'authentification avec le token externe
+        const cookieOptions = {
+          httpOnly: true,
+          secure: false,
+          sameSite: 'lax' as const,
+          maxAge: 7 * 24 * 60 * 60, // 7 jours
+          path: '/'
+        };
+        
+        response.cookies.set('auth-token', externalData.data.token, cookieOptions);
+        return response;
+      } else {
+        return NextResponse.json(
+          { success: false, error: externalData.message || 'Authentification échouée' },
+          { status: 401 }
+        );
+      }
+    }
+
+    // Sinon, utiliser l'ancienne méthode avec l'ID simple
     const result = await AgentControllers.loginAgentById(agentId);
     
     if (!result.agent) {
