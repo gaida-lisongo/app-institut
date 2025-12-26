@@ -10,89 +10,30 @@ import Badge from "../ui/badge/Badge";
 import Input from "../form/input/InputField";
 import Button from "../ui/button/Button";
 import { PlusIcon } from "@/icons";
-import { useUserStore } from "@/store/useUserStore";
+import { Agent, useUserStore } from "@/store/useUserStore";
 import { useEffect, useState, useMemo } from "react";
 import LoadingSpinner from "../ui/jury/LoadingSpinner";
 import CreateExpenseModal from "./CreateExpenseModal";
-import { Retrait } from "@/app/(admin)/page";
+import { baseUrl, Retrait } from "@/app/(admin)/page";
 import { Annee } from "@/app/(admin)/(appariteur)/inscriptions/[cycle]/page";
-import { TargetYear } from "./MonthlyTarget";
+import { on } from "events";
 
 export default function RecentOrders({
-  onFetch,
-  onYearData
+  annee,
+  agent,
+  retraits,
+  onAddDepense,
 } : {
-  onFetch?: (data: Retrait[]) => void;
-  onYearData?: (years: TargetYear[]) => void;
+  annee: Annee;
+  agent: Agent;
+  retraits: Retrait[];
+  onAddDepense?: () => void;
 }) {
-  const { agent } = useUserStore();
-  const [annee, setAnnee] = useState<Annee | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [listDepenses, setListDepenses] = useState<Retrait[]>([]);
+  const [listDepenses, setListDepenses] = useState<Retrait[]>(retraits || []);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState(""); // État pour la recherche 🔍
 
-  const baseUrl = 'http://localhost:3001/api/v1';
-
-  // 1. Récupération des données
-  useEffect(() => {
-    const fetchAnnees = async () => {
-      try {
-        const request = await fetch('/api/annees');
-        const response = await request.json();
-        if (response.success && response.data) {
-          const activeAnne = (response.data as Annee[]).find(yer => yer?.isActive === true);
-          if (activeAnne) setAnnee(activeAnne);
-        }
-      } catch (error) {
-        console.error('Erreur années:', error);
-      }
-    };
-    fetchAnnees();
-  }, []);
-
-  useEffect(() => {
-    if (agent?._id) {
-      readDepenses(agent._id);
-    }
-  }, [agent]);
-
-  // Fonctions pour gérer les retraits
-  const readDepenses = async (agentId: string) => {
-    setLoading(true);
-    try {
-      const request = await fetch(`${baseUrl}/retraits/user/${agentId}`);
-      const response = await request.json();
-      if (response.success) {
-        setListDepenses(response.data);
-        if (onFetch) {
-          onFetch(response.data as Retrait[]);
-        }
-
-        if(onYearData && annee) {
-          const totalTarget = (response.data as Retrait[]).length;
-          const amountSpent = (response.data as Retrait[]).reduce((sum, depense) => sum + (depense.status == "Completed" ? depense.amount : 0), 0);
-          const totalTargetOK = (response.data as Retrait[]).reduce((sum, depense) => sum + (depense.status == "Completed" ? 1 : 0), 0);
-          const totalTargetPending = (response.data as Retrait[]).reduce((sum, depense) => sum + (depense.status == "Pending" ? 1 : 0), 0);
-          const totalTargetFailed = (response.data as Retrait[]).reduce((sum, depense) => sum + (depense.status == "Failed" ? 1 : 0), 0);
-          const designation = annee?.debut + '-' + annee?.fin || 'N/A';
-          onYearData([{
-            _id: annee?._id || 'N/A',
-            totalTarget: totalTarget,
-            amountSpent: amountSpent,
-            totalTargetOK,
-            totalTargetPending,
-            totalTargetMissed: totalTargetFailed,
-            designation
-          }]);
-        }
-      }
-    } catch (error) {
-      console.error('Erreur lors de la récupération des retraits:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const createDepense = async (depenseData: {
     agentId: string;
@@ -110,10 +51,8 @@ export default function RecentOrders({
         body: JSON.stringify(depenseData),
       });
       const response = await request.json();
-      if (response.success && agent?._id) {
-        // Rafraîchir la liste
-        await readDepenses(agent._id);
-      }
+      console.log('Dépense créée:', response.data);
+      onAddDepense && onAddDepense();
     } catch (error) {
       console.error('Erreur lors de la création de la dépense:', error);
     } finally {

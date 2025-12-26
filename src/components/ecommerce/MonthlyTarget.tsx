@@ -5,7 +5,7 @@ import { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { MoreDotIcon } from "@/icons";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 
 export interface TargetYear {
@@ -36,6 +36,9 @@ export default function MonthlyTarget({ productsType, recettes }: MonthlyTargetP
   const [recttesFiltered, setRecettesFiltered] = useState<TargetYear[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
+  console.log('Current product:', currentProduct);
+  console.log('Recettes:', recettes);
+
   useEffect(() => {
     if (productsType.length > 0) {
       setCurrentProduct(productsType[0]);
@@ -49,7 +52,7 @@ export default function MonthlyTarget({ productsType, recettes }: MonthlyTargetP
 
   // Fonction pour calculer le pourcentage
   const calculatePercentage = (data: TargetYear[]) => {
-    const recettesACtive = data.filter(r => r.status === 'Completed');
+    const recettesACtive = data.filter(r => r.status === 'Pending' || r.status === 'Completed' || r.productType === currentProduct);
 
     const propotion = data?.length ? recettesACtive.length * 100 / data.length : 0;
     return Math.round(propotion);
@@ -57,15 +60,26 @@ export default function MonthlyTarget({ productsType, recettes }: MonthlyTargetP
 
   // State pour la série du graphique
   const [chartSeries, setChartSeries] = useState<number[]>([calculatePercentage(recttesFiltered)]);
+  const [isAnimating, setIsAnimating] = useState(false);
 
-  // Mettre à jour le graphique quand l'année change
+  // Mettre à jour le graphique quand l'année change avec animation synchronisée
   useEffect(() => {
     const newPercentage = calculatePercentage(recttesFiltered);
-    setChartSeries([newPercentage]);
-  }, [currentProduct]);
+    console.log('New percentage for', currentProduct, ':', newPercentage);
+    
+    if (chartSeries[0] !== newPercentage) {
+      setIsAnimating(true);
+      // Délai court pour s'assurer que l'état d'animation est mis à jour
+      setTimeout(() => {
+        setChartSeries([newPercentage]);
+        // Reset animation state après l'animation
+        setTimeout(() => setIsAnimating(false), 1000);
+      }, 50);
+    }
+  }, [currentProduct, recttesFiltered, chartSeries]);
 
-  // Options du graphique - mises à jour dynamiquement
-  const chartOptions: ApexOptions = {
+  // Options du graphique - optimisées pour une animation fluide
+  const chartOptions: ApexOptions = useMemo(() => ({
     colors: ["#465FFF"],
     chart: {
       fontFamily: "Outfit, sans-serif",
@@ -76,14 +90,15 @@ export default function MonthlyTarget({ productsType, recettes }: MonthlyTargetP
       },
       animations: {
         enabled: true,
-        speed: 800,
+        speed: 1200,
+        easing: 'easeinout',
         animateGradually: {
           enabled: true,
-          delay: 150
+          delay: 100
         },
         dynamicAnimation: {
           enabled: true,
-          speed: 350
+          speed: 800
         }
       }
     },
@@ -123,7 +138,7 @@ export default function MonthlyTarget({ productsType, recettes }: MonthlyTargetP
       lineCap: "round",
     },
     labels: ["Progress"],
-  };
+  }), []); // Mémoisation pour éviter les re-calculs inutiles
 
   function toggleDropdown() {
     setIsOpen(!isOpen);
@@ -163,7 +178,7 @@ export default function MonthlyTarget({ productsType, recettes }: MonthlyTargetP
                   }}
                 >
                   <div className="flex flex-col">
-                    <span className="font-medium">{currentProduct}</span>
+                    <span className="font-medium">{product}</span>
                     <span className="text-xs text-gray-500">
                       Target: {recttesFiltered.reduce((acc, curr) => acc + curr.amount, 0)}
                     </span>
@@ -180,12 +195,12 @@ export default function MonthlyTarget({ productsType, recettes }: MonthlyTargetP
               series={chartSeries}
               type="radialBar"
               height={330}
-              key={currentProduct} // Force re-render when year changes
+              // Suppression de la key pour permettre l'animation fluide
             />
           </div>
 
           <span className="absolute left-1/2 top-full -translate-x-1/2 -translate-y-[95%] rounded-full bg-success-50 px-3 py-1 text-xs font-medium text-success-600 dark:bg-success-500/15 dark:text-success-500">
-            Produits active {chartSeries[0]}%
+            Moyenne des prix {recttesFiltered.length > 0 ? (recttesFiltered.reduce((acc, curr) => acc + curr.amount, 0) / recttesFiltered.length).toFixed(2) : 0} FC
           </span>
         </div>
         <p className="mx-auto mt-10 w-full max-w-[380px] text-center text-sm text-gray-500 sm:text-base">

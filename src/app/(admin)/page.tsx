@@ -52,7 +52,7 @@ export default function Ecommerce() {
   // Fonctions pour gérer les retraits
   const readDepenses = async (agentId: string) => {
     try {
-      const request = await fetch(`${baseUrl}/retraits/user/${agentId}`);
+      const request = await fetch(`${baseUrl}/finance/retraits/user/${agentId}`);
       const response = await request.json();
       if (response.success) {
         const retraits: Retrait[] = response.data;
@@ -66,7 +66,7 @@ export default function Ecommerce() {
   // Fonctions pour recupérer les recettes
   const readRecettes = async (agentId: string) => {
     try {
-      const request = await fetch(`${baseUrl}/recettes/user/${agentId}`);
+      const request = await fetch(`${baseUrl}/finance/recettes?agentId=${agentId}`);
       const response = await request.json();
       if (response.success) {
         const recettes: any[] = response.data;
@@ -110,20 +110,32 @@ export default function Ecommerce() {
         />
 
         <MonthlySalesChart 
-          years={years || []}
+          annees={years || []}
           retraits={depenses || []}
         />
       </div>
 
       <div className="col-span-12 xl:col-span-5">
-        <MonthlyTarget years={years || []} retraits={depenses || []} />
+        <MonthlyTarget productsType={[
+          'Ressource', 
+          'Activity', 
+        ]} recettes={transactions || []} />
       </div>
 
       <div className="col-span-12">
-        <RecentOrders
-          years={years || []}
-          retraits={depenses || []}
-        />
+        {agent && <RecentOrders
+          annee={years.filter(y => y.isActive)[0] || null}
+          agent={agent}
+          retraits={depenses.filter(d => d.anneeId._id === (years.filter(y => y.isActive)[0]?._id || '')) || []}
+          onAddDepense={() => {
+            // Rafraîchir les données après l'ajout d'une dépense
+            if (agent?._id) {
+              readDepenses(agent._id).then((retraits) => {
+                setDepenses(retraits || []);
+              });
+            }
+          }}
+        />}
       </div>
 
     </div>
