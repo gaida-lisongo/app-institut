@@ -9,6 +9,16 @@ const nextConfig: NextConfig = {
     // Ignorer les erreurs TypeScript pendant le build
     ignoreBuildErrors: true,
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
+  },
   turbopack: {
     resolveAlias: {
       "@svgr/webpack": require.resolve("@svgr/webpack"),

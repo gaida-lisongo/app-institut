@@ -1,4 +1,5 @@
 import { Annee } from '@/app/(admin)/(appariteur)/inscriptions/[cycle]/page';
+import { baseUrl } from '@/app/(admin)/page';
 import { Matiere } from '@/types/cours';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -16,6 +17,7 @@ export interface Grade {
 
 export interface Agent {
   _id: string;
+  photo?: string;
   nom: string;
   post_nom: string;
   prenom: string;
@@ -72,6 +74,7 @@ export interface UserState {
   // Actions de base
   setUser: (agent: Agent, autorisations: Autorisation[]) => void;
   updateAgent: (agent: Partial<Agent>) => void;
+  updatePhoto: (photFile: File) => Promise<void>;
   addAutorisation: (autorisation: Autorisation) => void;
   removeAutorisation: (autorisationId: string) => void;
   clearUser: () => void;
@@ -382,12 +385,58 @@ export const useUserStore = create<UserState>()(
         }
       },
 
-      updateAgent: (agentUpdate: Partial<Agent>) => {
-        const currentAgent = get().agent;
-        if (currentAgent) {
-          set({
-            agent: { ...currentAgent, ...agentUpdate },
+      updateAgent: async(agentUpdate: Partial<Agent>) => {
+        try {
+          const currentAgent = get().agent;
+
+          const updatedAgent = {
+            ...currentAgent,
+            ...agentUpdate,
+          }
+
+          const request = await fetch(`${baseUrl}/agents/`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedAgent),
           });
+
+          const response = await request.json();
+          console.log('updateAgent response:', response);
+
+          if(response.success ) {
+            set({
+              agent: {...updatedAgent, _id: response.data._id } as Agent,
+            });
+          }
+        } catch (error) {
+          console.log("Erreur lors de la mise à jour de l'agent:", error);
+        }
+      },
+
+      updatePhoto: async (photFile: File) => {
+        try {
+          const currentAgent = get().agent;
+          if (!currentAgent) throw new Error('Aucun agent connecté');
+
+          const formData = new FormData();
+          formData.append('photo', photFile);
+          formData.append('agentId', currentAgent._id);
+
+          const request = await fetch(`${baseUrl}/agents/photo`, {
+            method: 'PUT',  
+            body: formData,
+          });
+
+          const response = await request.json();
+          console.log('updatePhoto response:', response);
+
+          if(response.success && response.data.photo ) {
+            set({
+              agent: { ...currentAgent, photo: response.data.photo },
+            });
+          }
+        } catch (error) {
+          console.error('Erreur lors de la mise à jour de la photo :', error);
         }
       },
 

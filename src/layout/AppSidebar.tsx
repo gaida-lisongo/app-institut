@@ -351,126 +351,126 @@ const AppSidebar: React.FC = () => {
 
     autorisations.forEach(auth => {
       switch (auth?.designation) {
-        case 'ADMINISTRATEUR':
-          data.push({
-            menuType: 'admin',
-            menuLabel: 'ADMINISTRATEUR',
-            menuItems: [
-              {
-                name: 'Mentions',
-                icon: <TableIcon />,
-                subItems: [
-                  {
-                    name: "Bureau",
-                    path: "/mentions/bureau",
-                  },
-                  {
-                    name: "Filière",
-                    path: "/mentions/filiere",
-                  }
-                ]
-              },
-              {
-                name: "Etudiants",
-                icon: <UserCircleIcon />,
-                path: "/students",
-              },
-              {
-                name: "Agents",
-                icon: <UserCircleIcon />,
-                subItems: [
-                  {
-                    name: "Enseignants",
-                    path: "/agents/enseignants",
-                  },
-                  {
-                    name: "Administratif",
-                    path: "/agents/administratifs",
-                  },
-                  {
-                    name: "Autorisation",
-                    path: "/agents/autorisations",
-                  },
-                ],
-              },
-            ]
-          })
-          break;
-        case 'ACADEMIQUE':
-          data.push({
-            menuType: 'acad',
-            menuLabel: 'ACADEMIQUE',
-            menuItems: [
-              {
-                name: 'Cours',
-                icon: <ListIcon />,
-                subItems: [
-                  {
-                    name: "Unites",
-                    path: "/cours/unites",
-                  },
-                  {
-                    name: "Charges Horaires",
-                    path: "/cours/titulaire",
-                  }
-                ]
-              },
-              {
-                name: "Classes",
-                icon: <PageIcon />,
-                path: "/promotions"
-              }
-            ]
-          })
-          break;
-        case 'APPARITEUR':
-          data.push({
-            menuType: 'app',
-            menuLabel: 'APPARITEUR',
-            menuItems: [
-              {
-                name: 'Inscriptions',
-                icon: <ListIcon />,
-                subItems: [
-                  {
-                    name: "PREPARATOIRE",
-                    path: "/inscriptions/Preparatoire",
-                  },
-                  {
-                    name: "LICENCE",
-                    path: "/inscriptions/Licence",
-                  },
-                  {
-                    name: "MASTER",
-                    path: "/inscriptions/Master",
-                  }
-                ]
-              },
-              {
-                name: "Documents",
-                icon: <PageIcon />,
-                subItems: [
-                  {
-                    name: "RELEVES",
-                    path: "/documents/releves",
-                  },
-                  {
-                    name: "FREQUENTATION",
-                    path: "/documents/frequentation",
-                  },
-                  {
-                    name: "STAGE",
-                    path: "/documents/stage"
-                  },
-                  {
-                    name: "SUJET",
-                    path: "/documents/sujet"
-                  },
-                ]
-              }
-            ]
-          })
-          break;
+        // case 'ADMINISTRATEUR':
+        //   data.push({
+        //     menuType: 'admin',
+        //     menuLabel: 'ADMINISTRATEUR',
+        //     menuItems: [
+        //       {
+        //         name: 'Mentions',
+        //         icon: <TableIcon />,
+        //         subItems: [
+        //           {
+        //             name: "Bureau",
+        //             path: "/mentions/bureau",
+        //           },
+        //           {
+        //             name: "Filière",
+        //             path: "/mentions/filiere",
+        //           }
+        //         ]
+        //       },
+        //       {
+        //         name: "Etudiants",
+        //         icon: <UserCircleIcon />,
+        //         path: "/students",
+        //       },
+        //       {
+        //         name: "Agents",
+        //         icon: <UserCircleIcon />,
+        //         subItems: [
+        //           {
+        //             name: "Enseignants",
+        //             path: "/agents/enseignants",
+        //           },
+        //           {
+        //             name: "Administratif",
+        //             path: "/agents/administratifs",
+        //           },
+        //           {
+        //             name: "Autorisation",
+        //             path: "/agents/autorisations",
+        //           },
+        //         ],
+        //       },
+        //     ]
+        //   })
+        //   break;
+        // case 'ACADEMIQUE':
+        //   data.push({
+        //     menuType: 'acad',
+        //     menuLabel: 'ACADEMIQUE',
+        //     menuItems: [
+        //       {
+        //         name: 'Cours',
+        //         icon: <ListIcon />,
+        //         subItems: [
+        //           {
+        //             name: "Unites",
+        //             path: "/cours/unites",
+        //           },
+        //           {
+        //             name: "Charges Horaires",
+        //             path: "/cours/titulaire",
+        //           }
+        //         ]
+        //       },
+        //       {
+        //         name: "Classes",
+        //         icon: <PageIcon />,
+        //         path: "/promotions"
+        //       }
+        //     ]
+        //   })
+        //   break;
+        // case 'APPARITEUR':
+        //   data.push({
+        //     menuType: 'app',
+        //     menuLabel: 'APPARITEUR',
+        //     menuItems: [
+        //       {
+        //         name: 'Inscriptions',
+        //         icon: <ListIcon />,
+        //         subItems: [
+        //           {
+        //             name: "PREPARATOIRE",
+        //             path: "/inscriptions/Preparatoire",
+        //           },
+        //           {
+        //             name: "LICENCE",
+        //             path: "/inscriptions/Licence",
+        //           },
+        //           {
+        //             name: "MASTER",
+        //             path: "/inscriptions/Master",
+        //           }
+        //         ]
+        //       },
+        //       {
+        //         name: "Documents",
+        //         icon: <PageIcon />,
+        //         subItems: [
+        //           {
+        //             name: "RELEVES",
+        //             path: "/documents/releves",
+        //           },
+        //           {
+        //             name: "FREQUENTATION",
+        //             path: "/documents/frequentation",
+        //           },
+        //           {
+        //             name: "STAGE",
+        //             path: "/documents/stage"
+        //           },
+        //           {
+        //             name: "SUJET",
+        //             path: "/documents/sujet"
+        //           },
+        //         ]
+        //       }
+        //     ]
+        //   })
+        //   break;
         case 'JURY':
           data.push({
             menuType: 'jury',
@@ -487,6 +487,10 @@ const AppSidebar: React.FC = () => {
                   {
                     name: "Palmarèsse",
                     path: "/deliberations/palmaresse",
+                  },
+                  {
+                    name: "Resultats",
+                    path: "/recharges",
                   }
                 ]
               }
@@ -628,8 +632,8 @@ const AppSidebar: React.FC = () => {
                 }))
               })), "Charges Horaires")
             }
-            {renderMenu("others", othersItems, "Others")}
-            {renderMenu("users", usersMenuItems, "Utilisateurs")}
+            {/* {renderMenu("others", othersItems, "Others")}
+            {renderMenu("users", usersMenuItems, "Utilisateurs")} */}
           </div>
         </nav>
         {/* {isExpanded || isHovered || isMobileOpen ? <SidebarWidget /> : null} */}

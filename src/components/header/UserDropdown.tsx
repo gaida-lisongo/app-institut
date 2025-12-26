@@ -24,7 +24,9 @@ export default function UserDropdown() {
   const handleLogout = useCallback(async () => {
     await logout();
     closeDropdown();
-  }, [logout, closeDropdown]);
+    // redirect to /login
+    window.location.href = "/signin";
+  }, [logout, closeDropdown]);    
 
   const generateMenu = () => {
     const menuItem : any[] = [
@@ -66,55 +68,55 @@ export default function UserDropdown() {
                 />
               </svg>)
     
-    autorisations.forEach((autorisation) => {
-      if(autorisation.designation === "ADMINISTRATEUR") {
+    // autorisations.forEach((autorisation) => {
+    //   if(autorisation.designation === "ADMINISTRATEUR") {
         
-        menuItem.push({
-          label: 'Annees',
-          href: '/annees',
-          onClick: () => {
-            closeDropdown();
-          },
-          icon: icon,
-        });
-      } else if(autorisation.designation === "SUPER-ADMIN") {
-        menuItem.push({
-          label: 'Recharges',
-          href: '/recharges',
-          onClick: () => {
-            closeDropdown();
-          },
-          icon: icon,
-        });
-      } else if(autorisation.designation === "ACADEMIQUE") {
-        menuItem.push({
-          label: 'Fiche de validation',
-          href: '/fiche-validation',
-          onClick: () => {
-            closeDropdown();
-          },
-          icon: icon,
-        });
-      } else if(autorisation.designation === "APPARITEUR") {
-        menuItem.push({
-          label: 'Enrolement',
-          href: '/enrolement',
-          onClick: () => {
-            closeDropdown();
-          },
-          icon: icon,
-        });
-      } else if(autorisation.designation === "JURY") {
-        menuItem.push({
-          label: 'Recours',
-          href: '/recours',
-          onClick: () => {
-            closeDropdown();
-          },
-          icon: icon,
-        });
-      }
-    });
+    //     menuItem.push({
+    //       label: 'Annees',
+    //       href: '/annees',
+    //       onClick: () => {
+    //         closeDropdown();
+    //       },
+    //       icon: icon,
+    //     });
+    //   } else if(autorisation.designation === "SUPER-ADMIN") {
+    //     menuItem.push({
+    //       label: 'Recharges',
+    //       href: '/recharges',
+    //       onClick: () => {
+    //         closeDropdown();
+    //       },
+    //       icon: icon,
+    //     });
+    //   } else if(autorisation.designation === "ACADEMIQUE") {
+    //     menuItem.push({
+    //       label: 'Fiche de validation',
+    //       href: '/fiche-validation',
+    //       onClick: () => {
+    //         closeDropdown();
+    //       },
+    //       icon: icon,
+    //     });
+    //   } else if(autorisation.designation === "APPARITEUR") {
+    //     menuItem.push({
+    //       label: 'Enrolement',
+    //       href: '/enrolement',
+    //       onClick: () => {
+    //         closeDropdown();
+    //       },
+    //       icon: icon,
+    //     });
+    //   } else if(autorisation.designation === "JURY") {
+    //     menuItem.push({
+    //       label: 'Recours',
+    //       href: '/recours',
+    //       onClick: () => {
+    //         closeDropdown();
+    //       },
+    //       icon: icon,
+    //     });
+    //   }
+    // });
 
     return menuItem;
   }
@@ -125,12 +127,19 @@ export default function UserDropdown() {
         className="flex items-center text-gray-700 dark:text-gray-400 dropdown-toggle"
       >
         <span className="mr-3 overflow-hidden rounded-full h-11 w-11">
-          <Image
-            width={44}
-            height={44}
-            src="/images/user/owner.jpg"
-            alt="User"
-          />
+          {
+            agent?.photo ?
+            <Image
+              width={44}
+              height={44}
+              src={agent.photo}
+              alt="User"
+            />
+            :
+            <div className="flex items-center justify-center w-11 h-11 bg-gray-100 dark:bg-gray-800 text-3xl font-semibold text-gray-600 dark:text-gray-300">
+              {agent ? `${agent.nom.charAt(0)}${agent.post_nom.charAt(0)}` : 'UU'}
+            </div>
+          }
         </span>
 
         <span className="block mr-1 font-medium text-theme-sm"> {agent?.grade?.code} {agent?.nom} {agent?.post_nom} {agent?.prenom}</span>
