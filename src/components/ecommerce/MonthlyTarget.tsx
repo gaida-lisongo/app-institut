@@ -36,9 +36,6 @@ export default function MonthlyTarget({ productsType, recettes }: MonthlyTargetP
   const [recttesFiltered, setRecettesFiltered] = useState<TargetYear[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
-  console.log('Current product:', currentProduct);
-  console.log('Recettes:', recettes);
-
   useEffect(() => {
     if (productsType.length > 0) {
       setCurrentProduct(productsType[0]);
@@ -65,8 +62,7 @@ export default function MonthlyTarget({ productsType, recettes }: MonthlyTargetP
   // Mettre à jour le graphique quand l'année change avec animation synchronisée
   useEffect(() => {
     const newPercentage = calculatePercentage(recttesFiltered);
-    console.log('New percentage for', currentProduct, ':', newPercentage);
-    
+   
     if (chartSeries[0] !== newPercentage) {
       setIsAnimating(true);
       // Délai court pour s'assurer que l'état d'animation est mis à jour

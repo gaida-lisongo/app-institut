@@ -33,24 +33,34 @@ export default function MonthlySalesChart({ annees, retraits }: MonthlySalesChar
     totalSales: number;
   }[]>([]);
 
+
   useEffect(() => {
     const parseData = () => {
+      const newYears: {
+        _id: string;
+        totalSales: number;
+        designation: string;
+      }[] = [];
+
       annees.forEach((annee) => {
+        console.log('Processing year:', annee);
         const currentRetraits = retraits.filter(
           (retrait) => retrait.anneeId._id === annee._id
         );
 
-        const totalSales = currentRetraits.reduce((acc, retrait) => acc + (retrait.status == 'Completed' ? 1 : 0), 0);
+        const totalSales = currentRetraits.reduce((acc, retrait) => acc + (retrait.status == 'Pending' ? 1 : 0), 0);
         const designation = annee.debut + ' - ' + annee.fin;
 
-        setYears((prevYears) => [...prevYears, { _id: annee._id, totalSales, designation }]);
-        
-
+        newYears.push({ _id: annee._id, totalSales, designation });
       });
+
+      setYears(newYears);
     }
 
-    parseData();
-  }, [])
+    if (annees.length > 0) {
+      parseData();
+    }
+  }, [annees, retraits])
 
   useEffect(() => {
     if (years.length > 0) {
@@ -77,7 +87,7 @@ export default function MonthlySalesChart({ annees, retraits }: MonthlySalesChar
           return (
             retrait.anneeId._id === year._id &&
             retraitDate.toLocaleString('en-US', { month: 'short' }) === month &&
-            retrait.status == 'Completed'
+            retrait.status == 'Pending'
           );
         }).length;
 
@@ -201,9 +211,12 @@ export default function MonthlySalesChart({ annees, retraits }: MonthlySalesChar
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-          Transactions mensuelles {years.find((y) => y._id === year?._id)?.designation}
-        </h3>
+        <div>
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+            Année académique {year?.designation}
+          </h3>
+          <span className="text-gray-500 text-theme-sm dark:text-gray-400">Total Transactions: {year?.totalSales}</span>
+        </div>
 
         <div className="relative inline-block">
           <button onClick={toggleDropdown} className="dropdown-toggle">
@@ -215,16 +228,16 @@ export default function MonthlySalesChart({ annees, retraits }: MonthlySalesChar
             className="w-40 p-2"
           >
             {
-              years.map((year) => (
+              years.map((y) => (
                 <DropdownItem
-                  key={year._id}
+                  key={y._id}
                   onClick={() => {
                     // Handle year selection logic here
-                    setYear(year);
+                    setYear(y);
                     closeDropdown();
                   }}
                 >
-                  {year.designation}
+                  {y.designation}
                 </DropdownItem>
               ))
             }
