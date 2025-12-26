@@ -34,7 +34,6 @@ export default function RecentOrders({
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState(""); // État pour la recherche 🔍
 
-
   const createDepense = async (depenseData: {
     agentId: string;
     anneeId: string;
@@ -232,7 +231,7 @@ export default function RecentOrders({
                 agentId: agent._id,
                 anneeId: annee._id,
                 amount: createdExpense.amount,
-                service: 'PAS'
+                service: 'ACADEMIQUE',
               });
             }
           } catch (error) {

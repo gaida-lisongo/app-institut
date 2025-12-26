@@ -52,7 +52,7 @@ export default function Ecommerce() {
   // Fonctions pour gérer les retraits
   const readDepenses = async (agentId: string) => {
     try {
-      const request = await fetch(`${baseUrl}/finance/retraits/user/${agentId}`);
+      const request = await fetch(`${baseUrl}/finance/retraits/service/${agentId}`);
       const response = await request.json();
       if (response.success) {
         const retraits: Retrait[] = response.data;
@@ -66,7 +66,7 @@ export default function Ecommerce() {
   // Fonctions pour recupérer les recettes
   const readRecettes = async (agentId: string) => {
     try {
-      const request = await fetch(`${baseUrl}/finance/recettes?agentId=${agentId}`);
+      const request = await fetch(`${baseUrl}/finance/recettes?productType=${agentId}`);
       const response = await request.json();
       if (response.success) {
         const recettes: any[] = response.data;
@@ -81,9 +81,20 @@ export default function Ecommerce() {
 
     const initData = async () => {
       if (agent?._id) {
-        const [annees, retraits, recettes ] = await Promise.all([fetchAnnees(), readDepenses(agent._id), readRecettes(agent._id)]);
+        const recettes = [];
+        
+        const [annees, retraits, recettesInsc, recettesDoc ] = await Promise.all([fetchAnnees(), readDepenses('ACADEMIQUE'), readRecettes('Inscription'), readRecettes('Document')]);
         setYears(annees || []);
         setDepenses(retraits || []);
+
+        if (recettesInsc) {
+          recettes.push(...recettesInsc);
+        }
+
+        if (recettesDoc) {
+          recettes.push(...recettesDoc);
+        }
+
         setTransactions(recettes || []);
       }
     };
@@ -117,8 +128,8 @@ export default function Ecommerce() {
 
       <div className="col-span-12 xl:col-span-5">
         <MonthlyTarget productsType={[
-          'Ressource', 
-          'Activity', 
+          'Inscription',
+          'Document',
         ]} recettes={transactions || []} />
       </div>
 

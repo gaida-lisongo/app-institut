@@ -371,11 +371,6 @@ const AppSidebar: React.FC = () => {
         //         ]
         //       },
         //       {
-        //         name: "Etudiants",
-        //         icon: <UserCircleIcon />,
-        //         path: "/students",
-        //       },
-        //       {
         //         name: "Agents",
         //         icon: <UserCircleIcon />,
         //         subItems: [
@@ -423,80 +418,77 @@ const AppSidebar: React.FC = () => {
         //     ]
         //   })
         //   break;
-        // case 'APPARITEUR':
-        //   data.push({
-        //     menuType: 'app',
-        //     menuLabel: 'APPARITEUR',
-        //     menuItems: [
-        //       {
-        //         name: 'Inscriptions',
-        //         icon: <ListIcon />,
-        //         subItems: [
-        //           {
-        //             name: "PREPARATOIRE",
-        //             path: "/inscriptions/Preparatoire",
-        //           },
-        //           {
-        //             name: "LICENCE",
-        //             path: "/inscriptions/Licence",
-        //           },
-        //           {
-        //             name: "MASTER",
-        //             path: "/inscriptions/Master",
-        //           }
-        //         ]
-        //       },
-        //       {
-        //         name: "Documents",
-        //         icon: <PageIcon />,
-        //         subItems: [
-        //           {
-        //             name: "RELEVES",
-        //             path: "/documents/releves",
-        //           },
-        //           {
-        //             name: "FREQUENTATION",
-        //             path: "/documents/frequentation",
-        //           },
-        //           {
-        //             name: "STAGE",
-        //             path: "/documents/stage"
-        //           },
-        //           {
-        //             name: "SUJET",
-        //             path: "/documents/sujet"
-        //           },
-        //         ]
-        //       }
-        //     ]
-        //   })
-        //   break;
-        case 'JURY':
+        case 'APPARITEUR':
           data.push({
-            menuType: 'jury',
-            menuLabel: 'JURY',
+            menuType: 'app',
+            menuLabel: 'SERVICE ACADEMIQUE',
             menuItems: [
               {
-                name: 'Délibération',
+                name: "Etudiants",
+                icon: <UserCircleIcon />,
+                path: "/students",
+              },
+              {
+                name: 'Inscriptions',
                 icon: <ListIcon />,
                 subItems: [
                   {
-                    name: "Grille",
-                    path: "/deliberations/grille",
+                    name: "PREPARATOIRE",
+                    path: "/inscriptions/Preparatoire",
                   },
                   {
-                    name: "Palmarèsse",
-                    path: "/deliberations/palmaresse",
+                    name: "LICENCE",
+                    path: "/inscriptions/Licence",
                   },
                   {
-                    name: "Resultats",
-                    path: "/recharges",
+                    name: "MASTER",
+                    path: "/inscriptions/Master",
                   }
+                ]
+              },
+              {
+                name: "Documents",
+                icon: <PageIcon />,
+                subItems: [
+                  {
+                    name: "RELEVES",
+                    path: "/documents/releves",
+                  },
+                  {
+                    name: "FREQUENTATION",
+                    path: "/documents/frequentation",
+                  },
                 ]
               }
             ]
           })
           break;
+        // case 'JURY':
+        //   data.push({
+        //     menuType: 'jury',
+        //     menuLabel: 'JURY',
+        //     menuItems: [
+        //       {
+        //         name: 'Délibération',
+        //         icon: <ListIcon />,
+        //         subItems: [
+        //           {
+        //             name: "Grille",
+        //             path: "/deliberations/grille",
+        //           },
+        //           {
+        //             name: "Palmarèsse",
+        //             path: "/deliberations/palmaresse",
+        //           },
+        //           {
+        //             name: "Resultats",
+        //             path: "/recharges",
+        //           }
+        //         ]
+        //       }
+        //     ]
+        //   })
+        //   break;
         
         default:
           break;
@@ -622,7 +614,7 @@ const AppSidebar: React.FC = () => {
                 ))}
               </>
             ) : null}
-            {
+            {/* {
               chargesHoraire && renderMenu("charges", groupedCharges.map(gc => ({
                 name: gc.designation,
                 icon: <ListIcon />,
@@ -631,7 +623,7 @@ const AppSidebar: React.FC = () => {
                   path: `/charge-horaire/${charge._id}`,
                 }))
               })), "Charges Horaires")
-            }
+            } */}
             {/* {renderMenu("others", othersItems, "Others")}
             {renderMenu("users", usersMenuItems, "Utilisateurs")} */}
           </div>
