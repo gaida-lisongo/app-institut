@@ -8,7 +8,7 @@ import { MoreDotIcon } from "@/icons";
 import { useEffect, useState } from "react";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 
-interface TargetYear {
+export interface TargetYear {
   _id: string;
   totalTarget: number;
   amountSpent: number;

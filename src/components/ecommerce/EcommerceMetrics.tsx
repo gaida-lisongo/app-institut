@@ -1,23 +1,26 @@
-"use client";
 import React from "react";
 import Badge from "../ui/badge/Badge";
 import { ArrowDownIcon, ArrowUpIcon, BoltIcon, BoxIconLine, DollarLineIcon, GroupIcon, PieChartIcon } from "@/icons";
+import { Retrait } from "@/app/(admin)/page";
 
 interface EcommerceMetricsProps {
-  recettesMetrics: {
-    totalTransactions: number;
-    amountCollected: number;
-  }
-
-  depensesMetrics: {
-    totalTransactions: number;
-    amountSpent: number;
-  }
+  retraits: Retrait[];
+  recettes: any[];
 }
 
 export default function EcommerceMetrics(
-  { recettesMetrics, depensesMetrics }: EcommerceMetricsProps
+  { recettes, retraits }: EcommerceMetricsProps
 ) {
+  const recettesMetrics = {
+    totalTransactions: recettes.reduce((count, transaction) => transaction.status === 'Completed' ? count + 1 : count, 0),
+    amountCollected: recettes.reduce((total, transaction) => total + (transaction.status === 'Completed' ? transaction.amount : 0), 0),
+  };
+
+  const depensesMetrics = {
+    totalTransactions: retraits.reduce((count, retrait) => retrait.status === 'Completed' ? count + 1 : count, 0),
+    amountSpent: retraits.reduce((total, retrait) => total + (retrait.status === 'Completed' ? retrait.amount : 0), 0),
+  };
+  
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
       {/* <!-- Metric Item Start --> */}

@@ -1,22 +1,16 @@
-"use client";
+'use client';
 import { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
 import { MoreDotIcon } from "@/icons";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
+import { Annee } from "@/app/(admin)/(appariteur)/inscriptions/[cycle]/page";
+import { Retrait } from "@/app/(admin)/page";
 
 interface MonthlySalesChartProps {
-  years: {
-    _id: string;
-    totalSales: number;
-    designation: string;
-  }[];
-  chartData: {
-    yearId: string;
-    month: string;
-    totalSales: number;
-  }[];
+  annees: Annee[];
+  retraits: Retrait[];
 }
 
 // Dynamically import the ReactApexChart component
@@ -24,11 +18,83 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
 });
 
-export default function MonthlySalesChart({ years, chartData }: MonthlySalesChartProps) {
-  const [year, setYear] = useState(years[0]?._id || '');
+export default function MonthlySalesChart({ annees, retraits }: MonthlySalesChartProps) {
+  const [years, setYears] = useState<{
+    _id: string;
+    totalSales: number;
+    designation: string;
+  }[]>([]);
+
+  const [year, setYear] = useState<{_id: string; totalSales: number; designation: string} | null>(null);
+
+  const [chartData, setChartData] = useState<{
+    yearId: string;
+    month: string;
+    totalSales: number;
+  }[]>([]);
+
+  useEffect(() => {
+    const parseData = () => {
+      annees.forEach((annee) => {
+        const currentRetraits = retraits.filter(
+          (retrait) => retrait.anneeId._id === annee._id
+        );
+
+        const totalSales = currentRetraits.reduce((acc, retrait) => acc + (retrait.status == 'Completed' ? 1 : 0), 0);
+        const designation = annee.debut + ' - ' + annee.fin;
+
+        setYears((prevYears) => [...prevYears, { _id: annee._id, totalSales, designation }]);
+        
+
+      });
+    }
+
+    parseData();
+  }, [])
+
+  useEffect(() => {
+    if (years.length > 0) {
+      setYear(years[0]);
+    }
+  }, [years]);
+
+  useEffect(() => {
+    if (year) {
+      const monthlyData: {
+        yearId: string;
+        month: string;
+        totalSales: number;
+      }[] = [];
+
+      const months = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+      ];
+
+      months.forEach((month) => {
+        const totalSales = retraits.filter((retrait) => {
+          const retraitDate = new Date(retrait.createdAt);
+          return (
+            retrait.anneeId._id === year._id &&
+            retraitDate.toLocaleString('en-US', { month: 'short' }) === month &&
+            retrait.status == 'Completed'
+          );
+        }).length;
+
+        monthlyData.push({
+          yearId: year._id,
+          month,
+          totalSales,
+        });
+      });
+
+      setChartData(monthlyData);
+    }
+  }, [year, retraits]);
+
 
   // Filtrer les données pour l'année sélectionnée
-  const filteredData = chartData.filter(data => data.yearId === year);
+  const filteredData = chartData.filter(data => data.yearId === year?._id);
   
   // Préparer les données pour le graphique
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -136,7 +202,7 @@ export default function MonthlySalesChart({ years, chartData }: MonthlySalesChar
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-          Transactions mensuelles {years.find((y) => y._id === year)?.designation}
+          Transactions mensuelles {years.find((y) => y._id === year?._id)?.designation}
         </h3>
 
         <div className="relative inline-block">
@@ -154,7 +220,7 @@ export default function MonthlySalesChart({ years, chartData }: MonthlySalesChar
                   key={year._id}
                   onClick={() => {
                     // Handle year selection logic here
-                    setYear(year._id);
+                    setYear(year);
                     closeDropdown();
                   }}
                 >
