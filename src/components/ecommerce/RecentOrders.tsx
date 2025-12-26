@@ -43,7 +43,7 @@ export default function RecentOrders({
   }) => {
     setLoading(true);
     try {
-      const request = await fetch(`${baseUrl}/retraits`, {
+      const request = await fetch(`${baseUrl}/finance/retraits`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -52,6 +52,17 @@ export default function RecentOrders({
       });
       const response = await request.json();
       console.log('Dépense créée:', response.data);
+      setListDepenses((prevDepenses) => [{
+        _id: response.data._id,
+        agentId: agent!,
+        anneeId: annee!,
+        service: response.data.service,
+        amount: response.data.amount,
+        status: response.data.status,
+        orderNumber: response.data.orderNumber,
+        createdAt: response.data.createdAt,
+        updatedAt: response.data.updatedAt
+      }, ...prevDepenses]);
       onAddDepense && onAddDepense();
     } catch (error) {
       console.error('Erreur lors de la création de la dépense:', error);
@@ -76,7 +87,7 @@ export default function RecentOrders({
     setLoading(true)
     try {
 
-      const request = await fetch(`${baseUrl}/retraits/${depenseId}`, {
+      const request = await fetch(`${baseUrl}/finance/retraits/${depenseId}`, {
 
         method: 'DELETE',
 
