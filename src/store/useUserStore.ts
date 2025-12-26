@@ -4,6 +4,30 @@ import { Matiere } from '@/types/cours';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
+// Fonctions utilitaires pour la gestion des cookies
+const setCookie = (name: string, value: string, days: number = 7) => {
+  if (typeof document !== 'undefined') {
+    const expires = new Date();
+    expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+    document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;secure;samesite=strict`;
+  }
+};
+
+const getCookie = (name: string): string | null => {
+  if (typeof document !== 'undefined') {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+  }
+  return null;
+};
+
+const deleteCookie = (name: string) => {
+  if (typeof document !== 'undefined') {
+    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+  }
+};
+
 // Types pour le store
 export interface Grade {
   _id: string;
@@ -72,9 +96,10 @@ export interface UserState {
   loading: boolean;
   error: string | null;
   chargesHoraire: any[] | null;
+  token: string | null;
   
   // Actions de base
-  setUser: (agent: Agent, autorisations: Autorisation[]) => void;
+  setUser: (agent: Agent, autorisations: Autorisation[], token?: string) => void;
   updateAgent: (agent: Partial<Agent>) => void;
   updatePhoto: (photFile: File) => Promise<void>;
   addAutorisation: (autorisation: Autorisation) => void;
@@ -98,6 +123,12 @@ export interface UserState {
   
   // Actions d'authentification
   authenticateAgent: (agentId: string) => Promise<{ success: boolean; error?: string; data?: any }>;
+  authenticateLoginAgent: ({
+    matricule,
+    secure
+  }: { matricule: string; secure: string }) => Promise<{ success: boolean; error?: string; data?: any }>;
+  
+
   logout: () => Promise<void>;
   checkAuth: () => Promise<boolean>;
   
@@ -118,15 +149,22 @@ export const useUserStore = create<UserState>()(
       loading: false,
       error: null,
       chargesHoraire: null,
+      token: null,
 
       // Actions de base
-      setUser: (agent: Agent, autorisations: Autorisation[]) => {
+      setUser: (agent: Agent, autorisations: Autorisation[], token?: string) => {
         set({
           agent,
           autorisations,
           isAuthenticated: true,
           error: null,
+          token,
         });
+        
+        // Sauvegarder le token dans un cookie si fourni
+        if (token) {
+          setCookie('authToken', token, 7); // Expire dans 7 jours
+        }
       },
 
       fetchChargesHoraire: async (enseignantId: string) => {
@@ -461,13 +499,25 @@ export const useUserStore = create<UserState>()(
       },
 
       clearUser: () => {
+        // Supprimer le token du cookie
+        deleteCookie('authToken');
+        
         set({
           agent: null,
           autorisations: [],
           isAuthenticated: false,
           loading: false,
           error: null,
+          token: null,
         });
+      },
+
+      // Fonction pour initialiser le token depuis le cookie
+      initializeFromCookie: () => {
+        const tokenFromCookie = getCookie('authToken');
+        if (tokenFromCookie && !get().token) {
+          set({ token: tokenFromCookie });
+        }
       },
 
       setLoading: (loading: boolean) => {
@@ -488,8 +538,7 @@ export const useUserStore = create<UserState>()(
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ agentId }),
-            credentials: 'include'
+            body: JSON.stringify({ agentId })
           });
 
           const result = await response.json();
@@ -522,6 +571,55 @@ export const useUserStore = create<UserState>()(
         }
       },
 
+      authenticateLoginAgent: async ({ matricule, secure }) => {
+        try {
+          set({ loading: true, error: null });
+          const response = await fetch(`${baseUrl}/agents/auth`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ matricule, secure })
+          });
+          const result = await response.json();
+
+          if (result.success) {
+            // Extraire le token de la réponse
+            const { token } = result.data || {};
+            
+            // Persister les données dans le store
+            set({
+              agent: result.data.agent,
+              autorisations: result.data.autorisations,
+              isAuthenticated: true,
+              loading: false,
+              error: null,
+              token,
+            });
+
+            // Sauvegarder le token dans un cookie
+            if (token) {
+              setCookie('auth-token', token, 7); // Expire dans 7 jours
+            }
+
+            return { success: true, data: result.data };
+          } else {
+            set({
+              loading: false,
+              error: result.error || 'Erreur d\'authentification',
+            });
+            return { success: false, error: result.error };
+          }
+        } catch (error: any) {
+          const errorMessage = 'Erreur de connexion au serveur';
+          set({
+            loading: false,
+            error: errorMessage,
+          });
+          return { success: false, error: errorMessage };
+        }
+      },
+
       logout: async () => {
         try {
           set({ loading: true });
@@ -531,6 +629,9 @@ export const useUserStore = create<UserState>()(
             credentials: 'include'
           });
 
+          // Supprimer le token du cookie
+          deleteCookie('authToken');
+
           // Nettoyer le store
           set({
             agent: null,
@@ -538,9 +639,12 @@ export const useUserStore = create<UserState>()(
             isAuthenticated: false,
             loading: false,
             error: null,
+            token: null,
           });
         } catch (error) {
           console.error('Erreur lors de la déconnexion:', error);
+          // Supprimer le token du cookie même en cas d'erreur
+          deleteCookie('authToken');
           // Nettoyer quand même le store local
           set({
             agent: null,
@@ -548,6 +652,7 @@ export const useUserStore = create<UserState>()(
             isAuthenticated: false,
             loading: false,
             error: null,
+            token: null,
           });
         }
       },
@@ -625,6 +730,7 @@ export const useUserStore = create<UserState>()(
         agent: state.agent,
         autorisations: state.autorisations,
         isAuthenticated: state.isAuthenticated,
+        token: state.token, // Persister aussi le token
       }),
       
       // Optionnel : version pour la migration des données
@@ -647,6 +753,10 @@ export const useAutorisations = () => useUserStore((state) => state.autorisation
 export const useIsAuthenticated = () => useUserStore((state) => state.isAuthenticated);
 export const useAuthLoading = () => useUserStore((state) => state.loading);
 export const useAuthError = () => useUserStore((state) => state.error);
+export const useToken = () => useUserStore((state) => state.token);
+
+// Fonction utilitaire pour récupérer le token depuis le cookie
+export const getTokenFromCookie = () => getCookie('authToken');
 
 // Hooks individuels pour éviter les boucles infinies
 export const useSetUser = () => useUserStore((state) => state.setUser);

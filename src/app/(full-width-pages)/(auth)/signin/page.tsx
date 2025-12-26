@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ChevronLeftIcon from '@/icons/chevron-left.svg';
-import { useAuthenticateAgent, useCheckAuth, useAuthLoading, useAuthError, useIsAuthenticated } from '@/store/useUserStore';
+import { useAuthenticateAgent, useCheckAuth, useAuthLoading, useAuthError, useIsAuthenticated, useUserStore } from '@/store/useUserStore';
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -12,7 +12,7 @@ export default function LoginPage() {
     secure: ''
   });
   const router = useRouter();
-  const authenticateAgent = useAuthenticateAgent();
+  const { authenticateLoginAgent } = useUserStore();
   const checkAuth = useCheckAuth();
   const loading = useAuthLoading();
   const error = useAuthError();
@@ -51,9 +51,21 @@ export default function LoginPage() {
       const agentId = `${formData.matricule.trim()}:${formData.secure}`;
       
       // Utiliser l'action du store pour authentifier
-      const result = await authenticateAgent(agentId);
+      const result = await authenticateLoginAgent({
+        matricule: formData.matricule.trim(),
+        secure: formData.secure
+      });
+
+      const {
+        token: totken
+      } = result.data || {};
+
+      console.log('Token reçu après connexion:', totken);
       
       if (result.success) {
+
+        //save token to local storage
+        localStorage.setItem('authToken', totken);
         // Redirection vers le dashboard après authentification réussie et persistance
         router.push('/');
       }
@@ -61,19 +73,10 @@ export default function LoginPage() {
     } catch (error) {
       console.error('Erreur de connexion:', error);
     }
-  }, [formData, authenticateAgent, router]);
+  }, [formData, authenticateLoginAgent, router]);
 
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full">
-      <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
-        <Link
-          href="/"
-          className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-        >
-          <ChevronLeftIcon />
-          Retour à l'accueil
-        </Link>
-      </div>
       
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div>
