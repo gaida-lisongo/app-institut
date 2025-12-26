@@ -24,9 +24,11 @@ export interface Agent {
   grade: Grade;
   matricule: string;
   secure: string;
+  solde: number;
   sexe: string;
   email: string;
   telephone: string;
+  adresse: string;
   createdAt: string;
   updatedAt: string;
   __v: number;

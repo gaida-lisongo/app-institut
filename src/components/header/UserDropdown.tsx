@@ -174,7 +174,7 @@ export default function UserDropdown() {
             {agent?.nom} {agent?.post_nom} {agent?.prenom}
           </span>
           <span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
-            {agent?.matricule}
+            {agent ? agent.solde : '0'} FC
           </span>
         </div>
 

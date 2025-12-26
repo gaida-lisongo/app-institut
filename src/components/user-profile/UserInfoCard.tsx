@@ -5,65 +5,107 @@ import { Modal } from "../ui/modal";
 import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
+import { useUserStore } from "@/store/useUserStore";
+import Select from "../form/Select";
+import LoadingSpinner from "../ui/jury/LoadingSpinner";
 
 export default function UserInfoCard() {
-  const { isOpen, openModal, closeModal } = useModal();
-  const handleSave = () => {
-    // Handle save logic here
-    console.log("Saving changes...");
-    closeModal();
+  const { agent, updateAgent } = useUserStore();
+  const [loading, setLoading] = React.useState(false);
+  const [formData, setFormData] = React.useState({
+    nom: agent?.nom || "",
+    post_nom: agent?.post_nom || "",
+    prenom: agent?.prenom || "",
+    sexe: agent?.sexe || "",
+    email: agent?.email || "",
+    telephone: agent?.telephone || "",
+    adresse: agent?.adresse || "",
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
+
+  const { isOpen, openModal, closeModal } = useModal();
+  const handleSave = async () => {
+    try {
+      // Handle save logic here
+      console.log("data to change", formData);
+      closeModal();
+      setLoading(true);
+
+      await updateAgent(formData);
+  
+    } catch (error) {
+      console.error("Error saving changes:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if(loading) {
+    return <LoadingSpinner />;
+  }
+
   return (
     <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-6">
-            Personal Information
+            Informations Personnelles
           </h4>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
             <div>
               <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                First Name
+                Nom complet
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Musharof
+                {
+                  agent
+                    ? `${agent.nom} ${agent.post_nom} ${agent.prenom}`
+                    : 'N/A'
+                }
               </p>
             </div>
 
             <div>
               <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Last Name
+                Sexe
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Chowdhury
+                {agent ? agent.sexe : 'N/A'}
               </p>
             </div>
 
             <div>
               <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Email address
+                Email
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                randomuser@pimjo.com
+                {agent ? agent.email : 'N/A'}
               </p>
             </div>
 
             <div>
               <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Phone
+                Téléphone
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                +09 363 398 46
+                {agent ? agent.telephone : 'N/A'}
               </p>
             </div>
 
             <div>
               <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Bio
+                Adresse
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Team Manager
+                {agent?.adresse ? agent.adresse : 'N/A'}
               </p>
             </div>
           </div>
@@ -88,100 +130,105 @@ export default function UserInfoCard() {
               fill=""
             />
           </svg>
-          Edit
+          Modifier
         </button>
       </div>
 
-      <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
-        <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
+      <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[900px] m-4">
+        <div className="no-scrollbar relative w-full max-w-[900px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
           <div className="px-2 pr-14">
             <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-              Edit Personal Information
+              Modifier les informations personnelles
             </h4>
             <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
-              Update your details to keep your profile up-to-date.
+              Mettez à jour vos informations pour garder votre profil à jour.
             </p>
           </div>
-          <form className="flex flex-col">
-            <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
+          <div className="flex flex-col">
+            <div className="custom-scrollbar h-[490px] overflow-y-auto px-2 pb-3">
               <div>
                 <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
-                  Social Links
+                  Identités
                 </h5>
 
                 <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
                   <div>
-                    <Label>Facebook</Label>
+                    <Label>Nom</Label>
                     <Input
                       type="text"
-                      defaultValue="https://www.facebook.com/PimjoHQ"
+                      name="nom"
+                      defaultValue={formData.nom}
+                      onChange={handleChange}
                     />
                   </div>
 
                   <div>
-                    <Label>X.com</Label>
-                    <Input type="text" defaultValue="https://x.com/PimjoHQ" />
+                    <Label>Post - nom</Label>
+                    <Input type="text" name="post_nom" defaultValue={formData.post_nom} onChange={handleChange} />
                   </div>
 
                   <div>
-                    <Label>Linkedin</Label>
+                    <Label>Prenom</Label>
                     <Input
                       type="text"
-                      defaultValue="https://www.linkedin.com/company/pimjo"
+                      name="prenom"
+                      defaultValue={formData.prenom}
+                      onChange={handleChange}
                     />
                   </div>
 
                   <div>
-                    <Label>Instagram</Label>
-                    <Input
-                      type="text"
-                      defaultValue="https://instagram.com/PimjoHQ"
+                    <Label>Sexe</Label>
+                    <Select
+                      options={[
+                        { label: "Masculin", value: "M" },
+                        { label: "Féminin", value: "F" },
+                      ]}
+                      defaultValue={formData.sexe}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          sexe: e,
+                        }))
+                      } 
                     />
+
                   </div>
                 </div>
               </div>
               <div className="mt-7">
                 <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
-                  Personal Information
+                  Coordonées
                 </h5>
 
                 <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+
                   <div className="col-span-2 lg:col-span-1">
-                    <Label>First Name</Label>
-                    <Input type="text" defaultValue="Musharof" />
+                    <Label>Email</Label>
+                    <Input type="text" name="email" defaultValue={formData.email} onChange={handleChange} />
                   </div>
 
                   <div className="col-span-2 lg:col-span-1">
-                    <Label>Last Name</Label>
-                    <Input type="text" defaultValue="Chowdhury" />
-                  </div>
-
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>Email Address</Label>
-                    <Input type="text" defaultValue="randomuser@pimjo.com" />
-                  </div>
-
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>Phone</Label>
-                    <Input type="text" defaultValue="+09 363 398 46" />
+                    <Label>Téléphone</Label>
+                    <Input type="text" name="telephone" defaultValue={formData.telephone} onChange={handleChange} />
                   </div>
 
                   <div className="col-span-2">
-                    <Label>Bio</Label>
-                    <Input type="text" defaultValue="Team Manager" />
+                    <Label>Adresse</Label>
+                    <Input type="text" name="adresse" defaultValue={formData.adresse} onChange={handleChange} />
                   </div>
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
               <Button size="sm" variant="outline" onClick={closeModal}>
-                Close
+                Annuler
               </Button>
               <Button size="sm" onClick={handleSave}>
-                Save Changes
+                Enregistrer les modifications
               </Button>
             </div>
-          </form>
+          </div>
         </div>
       </Modal>
     </div>
