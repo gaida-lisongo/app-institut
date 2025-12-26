@@ -28,9 +28,9 @@ export interface Retrait {
   description?: string;
 }
 
-export const baseUrl = 'http://localhost:3001/api/v1';
+export const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
 
-
+console.log('Base URL:', baseUrl);
 export default function Ecommerce() {
   const { agent } = useUserStore();
   const [years, setYears] = useState<Annee[] | null>(null);
