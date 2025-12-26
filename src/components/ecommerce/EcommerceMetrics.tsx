@@ -11,14 +11,16 @@ interface EcommerceMetricsProps {
 export default function EcommerceMetrics(
   { recettes, retraits }: EcommerceMetricsProps
 ) {
+  console.log('Recettes dans EcommerceMetrics:', recettes);
+  console.log('Dépenses dans EcommerceMetrics:', retraits);
   const recettesMetrics = {
-    totalTransactions: recettes.reduce((count, transaction) => transaction.status === 'Completed' ? count + 1 : count, 0),
-    amountCollected: recettes.reduce((total, transaction) => total + (transaction.status === 'Completed' ? transaction.amount : 0), 0),
+    totalTransactions: recettes.reduce((count, transaction) => transaction.status === 'Pending' ? count + 1 : count, 0),
+    amountCollected: recettes.reduce((total, transaction) => total + (transaction.status === 'Pending' ? transaction.amount : 0), 0),
   };
 
   const depensesMetrics = {
-    totalTransactions: retraits.reduce((count, retrait) => retrait.status === 'Completed' ? count + 1 : count, 0),
-    amountSpent: retraits.reduce((total, retrait) => total + (retrait.status === 'Completed' ? retrait.amount : 0), 0),
+    totalTransactions: retraits.length,
+    amountSpent: retraits.reduce((total, retrait) => total + (retrait.status === 'Pending' ? retrait.amount : 0), 0),
   };
   
   return (
@@ -39,14 +41,8 @@ export default function EcommerceMetrics(
             </h4>
           </div>
           <Badge color="success">
-            {
-              (recettesMetrics.amountCollected / (recettesMetrics.amountCollected + depensesMetrics.amountSpent)) * 100 < 50.00 ? (
-                <ArrowDownIcon />
-              ) : (
-                <ArrowUpIcon />
-              )
-            }
-            { ((recettesMetrics.amountCollected / (recettesMetrics.amountCollected + depensesMetrics.amountSpent)) * 100).toFixed(2) }%
+            <ArrowUpIcon />
+            { (recettesMetrics.amountCollected).toFixed(2) } FC
           </Badge>
         </div>
       </div>
@@ -68,14 +64,8 @@ export default function EcommerceMetrics(
           </div>
 
           <Badge color="error">
-            {
-              (depensesMetrics.amountSpent / (recettesMetrics.amountCollected + depensesMetrics.amountSpent)) * 100 < 50.00 ? (
-                <ArrowDownIcon />
-              ) : (
-                <ArrowUpIcon />
-              )
-            }
-            { ((depensesMetrics.amountSpent / (recettesMetrics.amountCollected + depensesMetrics.amountSpent)) * 100).toFixed(2) }%
+            <ArrowUpIcon />
+            { (depensesMetrics.amountSpent).toFixed(2) } FC
           </Badge>
         </div>
       </div>
