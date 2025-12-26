@@ -10,16 +10,20 @@ import { DropdownItem } from "../ui/dropdown/DropdownItem";
 
 export interface TargetYear {
   _id: string;
-  totalTarget: number;
-  amountSpent: number;
-  totalTargetOK: number;
-  totalTargetPending: number;
-  totalTargetMissed: number;
-  designation: string;
+  amount: number;
+  productId: string;
+  productType: string;
+  status: 'Pending' | 'Completed' | 'Failed';
+  subscriptions: {
+    student: any;
+    lastSolde: number;
+    newSolde: number;
+  }[]
 }
 
 interface MonthlyTargetProps {
-  years: TargetYear[];
+  productsType: string[];
+  recettes: TargetYear[];
 }
 
 // Dynamically import the ReactApexChart component
@@ -27,24 +31,38 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
 });
 
-export default function MonthlyTarget({ years }: MonthlyTargetProps) {
-  const [currentYear, setCurrentYear] = useState<TargetYear>(years[0] || {});
+export default function MonthlyTarget({ productsType, recettes }: MonthlyTargetProps) {
+  const [currentProduct, setCurrentProduct] = useState<string>('');
+  const [recttesFiltered, setRecettesFiltered] = useState<TargetYear[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
+  useEffect(() => {
+    if (productsType.length > 0) {
+      setCurrentProduct(productsType[0]);
+    }
+  }, [productsType]);
+
+  useEffect(() => {
+    const filtered = recettes.filter(r => r.productType === currentProduct);
+    setRecettesFiltered(filtered);
+  }, [currentProduct, recettes]);
+
   // Fonction pour calculer le pourcentage
-  const calculatePercentage = (year: TargetYear) => {
-    if (!year || !year.totalTarget || year.totalTarget === 0) return 0;
-    return Math.round((year.totalTargetOK / year.totalTarget) * 100);
+  const calculatePercentage = (data: TargetYear[]) => {
+    const recettesACtive = data.filter(r => r.status === 'Completed');
+
+    const propotion = data?.length ? recettesACtive.length * 100 / data.length : 0;
+    return Math.round(propotion);
   };
 
   // State pour la série du graphique
-  const [chartSeries, setChartSeries] = useState<number[]>([calculatePercentage(years[0] || {})]);
+  const [chartSeries, setChartSeries] = useState<number[]>([calculatePercentage(recttesFiltered)]);
 
   // Mettre à jour le graphique quand l'année change
   useEffect(() => {
-    const newPercentage = calculatePercentage(currentYear);
+    const newPercentage = calculatePercentage(recttesFiltered);
     setChartSeries([newPercentage]);
-  }, [currentYear]);
+  }, [currentProduct]);
 
   // Options du graphique - mises à jour dynamiquement
   const chartOptions: ApexOptions = {
@@ -121,10 +139,10 @@ export default function MonthlyTarget({ years }: MonthlyTargetProps) {
         <div className="flex justify-between">
           <div>
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-              Dépenses Annuel
+              Reccette {currentProduct}
             </h3>
             <p className="mt-1 font-normal text-gray-500 text-theme-sm dark:text-gray-400">
-              {currentYear.designation}
+              {recttesFiltered.reduce((acc, curr) => acc + curr?.subscriptions?.length, 0)} transactions effectuées
             </p>
           </div>
           <div className="relative inline-block">
@@ -136,18 +154,18 @@ export default function MonthlyTarget({ years }: MonthlyTargetProps) {
               onClose={closeDropdown}
               className="w-40 p-2"
             >
-              {years.map((year) => (
+              {productsType.map((product) => (
                 <DropdownItem
-                  key={year._id}
+                  key={product}
                   onClick={() => {
-                    setCurrentYear(year);
+                    setCurrentProduct(product);
                     closeDropdown();
                   }}
                 >
                   <div className="flex flex-col">
-                    <span className="font-medium">{year.designation}</span>
+                    <span className="font-medium">{currentProduct}</span>
                     <span className="text-xs text-gray-500">
-                      Target: {year.totalTarget}
+                      Target: {recttesFiltered.reduce((acc, curr) => acc + curr.amount, 0)}
                     </span>
                   </div>
                 </DropdownItem>
@@ -162,26 +180,26 @@ export default function MonthlyTarget({ years }: MonthlyTargetProps) {
               series={chartSeries}
               type="radialBar"
               height={330}
-              key={currentYear._id} // Force re-render when year changes
+              key={currentProduct} // Force re-render when year changes
             />
           </div>
 
           <span className="absolute left-1/2 top-full -translate-x-1/2 -translate-y-[95%] rounded-full bg-success-50 px-3 py-1 text-xs font-medium text-success-600 dark:bg-success-500/15 dark:text-success-500">
-            {currentYear.totalTargetOK || 0}
+            Produits active {chartSeries[0]}%
           </span>
         </div>
         <p className="mx-auto mt-10 w-full max-w-[380px] text-center text-sm text-gray-500 sm:text-base">
-          Vous avez atteint {currentYear.amountSpent || 0} de dépenses pour cette année.          
+          Vous avez atteint {recttesFiltered.reduce((acc, curr) => acc + curr.amount * curr?.subscriptions?.length, 0)} FC de recettes pour cette catégorie.          
         </p>
       </div>
 
       <div className="flex items-center justify-center gap-5 px-6 py-3.5 sm:gap-8 sm:py-5">
         <div>
           <p className="mb-1 text-center text-gray-500 text-theme-xs dark:text-gray-400 sm:text-sm">
-            Total Dépenses
+            Catégories
           </p>
           <p className="flex items-center justify-center gap-1 text-base font-semibold text-gray-800 dark:text-white/90 sm:text-lg">
-            {currentYear.totalTarget}
+            {productsType?.length}
             <svg
               width="16"
               height="16"
@@ -193,7 +211,7 @@ export default function MonthlyTarget({ years }: MonthlyTargetProps) {
                 fillRule="evenodd"
                 clipRule="evenodd"
                 d="M7.26816 13.6632C7.4056 13.8192 7.60686 13.9176 7.8311 13.9176C7.83148 13.9176 7.83187 13.9176 7.83226 13.9176C8.02445 13.9178 8.21671 13.8447 8.36339 13.6981L12.3635 9.70076C12.6565 9.40797 12.6567 8.9331 12.3639 8.6401C12.0711 8.34711 11.5962 8.34694 11.3032 8.63973L8.5811 11.36L8.5811 2.5C8.5811 2.08579 8.24531 1.75 7.8311 1.75C7.41688 1.75 7.0811 2.08579 7.0811 2.5L7.0811 11.3556L4.36354 8.63975C4.07055 8.34695 3.59568 8.3471 3.30288 8.64009C3.01008 8.93307 3.01023 9.40794 3.30321 9.70075L7.26816 13.6632Z"
-                fill="#D92D20"
+                fill="#20d93fff"
               />
             </svg>
           </p>
@@ -203,10 +221,10 @@ export default function MonthlyTarget({ years }: MonthlyTargetProps) {
 
         <div>
           <p className="mb-1 text-center text-gray-500 text-theme-xs dark:text-gray-400 sm:text-sm">
-            Complété
+            Produits
           </p>
           <p className="flex items-center justify-center gap-1 text-base font-semibold text-gray-800 dark:text-white/90 sm:text-lg">
-            {currentYear.totalTargetOK}
+            {recettes.length}
             <svg
               width="16"
               height="16"
@@ -228,10 +246,10 @@ export default function MonthlyTarget({ years }: MonthlyTargetProps) {
 
         <div>
           <p className="mb-1 text-center text-gray-500 text-theme-xs dark:text-gray-400 sm:text-sm">
-            En cours
+            Active
           </p>
           <p className="flex items-center justify-center gap-1 text-base font-semibold text-gray-800 dark:text-white/90 sm:text-lg">
-            {currentYear.totalTargetPending}
+            {recettes.filter(r => r.status === 'Pending' || r.status === 'Completed').length}
             <svg
               width="16"
               height="16"
