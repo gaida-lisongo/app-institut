@@ -1,7 +1,7 @@
 'use client';
 
 import LoadingSpinner from "@/components/ui/jury/LoadingSpinner";
-import { useAcademique } from "../layout";
+import { Filiere, useAcademique } from "../layout";
 import { Annee, Promotion } from "../../(appariteur)/inscriptions/[cycle]/page";
 import { Matiere } from "@/types/cours";
 import { Etudiant } from "@/app/(resultat)/layout";
@@ -10,7 +10,6 @@ import { baseUrl } from "../../page";
 import EnrollementManager from "@/components/enrollements/EnrollementManager";
 import Button from "@/components/ui/button/Button";
 import EnrollmentDetailsPage from "./[enrollementId]/page";
-import { set } from "mongoose";
 
 export interface Enrollement {
     _id: string;
@@ -47,6 +46,74 @@ export interface EnrolementData {
         matieres: string[];
     };
 }
+
+export const PromotionsCard = ({ 
+        filiere, 
+        promotions, 
+        onClick,
+        title
+    }: { filiere: Filiere; promotions: Promotion[]; onClick: (promotion: Promotion) => void, title: string }) => {
+    return (<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {promotions.map((promotion) => (
+            <div 
+                key={promotion._id} 
+                className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-shadow duration-200"
+            >
+                <div className="flex flex-col h-full">
+                    <div className="flex-1">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                                {promotion.designation}
+                            </h3>
+                            <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-full">
+                                <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                </svg>
+                            </div>
+                        </div>
+                        
+                        <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm">
+                            Gérez les enrôlements, les frais, et les inscriptions pour la promotion {promotion.designation}.
+                        </p>
+                        
+                        <div className="space-y-2 mb-6">
+                            <div className="flex items-center text-sm">
+                                <svg className="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                                <span className="text-gray-600 dark:text-gray-400">
+                                    {promotion.cycle} • {promotion.niveau}ème année
+                                </span>
+                            </div>
+                            <div className="flex items-center text-sm">
+                                <svg className="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                                <span className="text-gray-600 dark:text-gray-400">
+                                    Filière: {filiere?.designation}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="mt-auto">
+                        <Button
+                            onClick={() => onClick(promotion)}
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"
+                        >
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            {title}
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        ))}
+    </div>);                    
+                    
+};
 
 
 const EnrolementsPage = () => {
@@ -158,7 +225,7 @@ const EnrolementsPage = () => {
         }
     };
 
-    if(selectedEnrollement) return <EnrollmentDetailsPage enrollement={selectedEnrollement} />;
+    if(selectedEnrollement) return <EnrollmentDetailsPage enrollement={selectedEnrollement} onBack={() => setSelectedEnrollement(null)} />;
 
     return (
         <div>
@@ -186,68 +253,15 @@ const EnrolementsPage = () => {
                         </p>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {selectedFiliere.promotions.map((promotion) => (
-                            <div 
-                                key={promotion._id} 
-                                className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-shadow duration-200"
-                            >
-                                <div className="flex flex-col h-full">
-                                    <div className="flex-1">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                                                {promotion.designation}
-                                            </h3>
-                                            <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-full">
-                                                <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                                                </svg>
-                                            </div>
-                                        </div>
-                                        
-                                        <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm">
-                                            Gérez les enrôlements, les frais, et les inscriptions pour la promotion {promotion.designation}.
-                                        </p>
-                                        
-                                        <div className="space-y-2 mb-6">
-                                            <div className="flex items-center text-sm">
-                                                <svg className="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                </svg>
-                                                <span className="text-gray-600 dark:text-gray-400">
-                                                    {promotion.cycle} • {promotion.niveau}ème année
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center text-sm">
-                                                <svg className="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                                </svg>
-                                                <span className="text-gray-600 dark:text-gray-400">
-                                                    Filière: {selectedFiliere?.designation}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="mt-auto">
-                                        <Button
-                                            onClick={() => {
-                                                setSelectedPromotion(promotion);
-                                                setShowEnrolementManager(true);
-                                            }}
-                                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"
-                                        >
-                                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            </svg>
-                                            Gérer les Enrôlements
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                    <PromotionsCard
+                        filiere={selectedFiliere}
+                        promotions={selectedFiliere.promotions}
+                        onClick={(promotion) => {
+                            setSelectedPromotion(promotion);
+                            setShowEnrolementManager(true);
+                        }}
+                        title="Gérer les Enrôlements"
+                    />
                     
                     {selectedFiliere.promotions.length === 0 && (
                         <div className="text-center py-12">
