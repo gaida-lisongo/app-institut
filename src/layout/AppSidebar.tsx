@@ -351,118 +351,182 @@ const AppSidebar: React.FC = () => {
 
     autorisations.forEach(auth => {
       switch (auth?.designation) {
-        // case 'ADMINISTRATEUR':
-        //   data.push({
-        //     menuType: 'admin',
-        //     menuLabel: 'ADMINISTRATEUR',
-        //     menuItems: [
-        //       {
-        //         name: 'Mentions',
-        //         icon: <TableIcon />,
-        //         subItems: [
-        //           {
-        //             name: "Bureau",
-        //             path: "/mentions/bureau",
-        //           },
-        //           {
-        //             name: "Filière",
-        //             path: "/mentions/filiere",
-        //           }
-        //         ]
-        //       },
-        //       {
-        //         name: "Agents",
-        //         icon: <UserCircleIcon />,
-        //         subItems: [
-        //           {
-        //             name: "Enseignants",
-        //             path: "/agents/enseignants",
-        //           },
-        //           {
-        //             name: "Administratif",
-        //             path: "/agents/administratifs",
-        //           },
-        //           {
-        //             name: "Autorisation",
-        //             path: "/agents/autorisations",
-        //           },
-        //         ],
-        //       },
-        //     ]
-        //   })
-        //   break;
-        // case 'ACADEMIQUE':
-        //   data.push({
-        //     menuType: 'acad',
-        //     menuLabel: 'ACADEMIQUE',
-        //     menuItems: [
-        //       {
-        //         name: 'Cours',
-        //         icon: <ListIcon />,
-        //         subItems: [
-        //           {
-        //             name: "Unites",
-        //             path: "/cours/unites",
-        //           },
-        //           {
-        //             name: "Charges Horaires",
-        //             path: "/cours/titulaire",
-        //           }
-        //         ]
-        //       },
-        //       {
-        //         name: "Classes",
-        //         icon: <PageIcon />,
-        //         path: "/promotions"
-        //       }
-        //     ]
-        //   })
-        //   break;
-        case 'APPARITEUR':
+        case 'ADMINISTRATEUR':
           data.push({
-            menuType: 'app',
-            menuLabel: 'SERVICE ACADEMIQUE',
+            menuType: 'admin',
+            menuLabel: 'ADMINISTRATEUR',
             menuItems: [
               {
-                name: "Etudiants",
-                icon: <UserCircleIcon />,
-                path: "/students",
-              },
-              {
-                name: 'Inscriptions',
-                icon: <ListIcon />,
+                name: 'Mentions',
+                icon: <TableIcon />,
                 subItems: [
                   {
-                    name: "PREPARATOIRE",
-                    path: "/inscriptions/Preparatoire",
+                    name: "Bureau",
+                    path: "/mentions/bureau",
                   },
                   {
-                    name: "LICENCE",
-                    path: "/inscriptions/Licence",
-                  },
-                  {
-                    name: "MASTER",
-                    path: "/inscriptions/Master",
+                    name: "Filière",
+                    path: "/mentions/filiere",
                   }
                 ]
               },
               {
-                name: "Documents",
-                icon: <PageIcon />,
+                name: "Agents",
+                icon: <UserCircleIcon />,
                 subItems: [
                   {
-                    name: "RELEVES",
-                    path: "/documents/releves",
+                    name: "Enseignants",
+                    path: "/agents/enseignants",
                   },
                   {
-                    name: "FREQUENTATION",
-                    path: "/documents/frequentation",
+                    name: "Administratif",
+                    path: "/agents/administratifs",
                   },
-                ]
-              }
+                  {
+                    name: "Autorisation",
+                    path: "/agents/autorisations",
+                  },
+                ],
+              },
             ]
           })
           break;
+        case 'ACADEMIQUE':
+          data.push(...[
+            {
+              menuType: 'enseignement',
+              menuLabel: 'ENSEIGNEMENT',
+              menuItems: [
+                {
+                  name: 'Cours',
+                  icon: <ListIcon />,
+                  subItems: [
+                    {
+                      name: "Unites",
+                      path: "/cours/unites",
+                    },
+                    {
+                      name: "Charges Horaires",
+                      path: "/cours/titulaire",
+                    }
+                  ]
+                },
+                {
+                  name: "Classes",
+                  icon: <PageIcon />,
+                  path: "/promotions"
+                }
+              ]
+            },
+            {
+              menuType: 'recherche',
+              menuLabel: 'RECHERCHE',
+              menuItems: [
+                {
+                  name: "Stages",
+                  icon: <CalenderIcon />,
+                  path: "/stages"
+                },
+                {
+                  name: "Sujets",
+                  icon: <BoxCubeIcon />,
+                  path: "/sujets"
+                }
+              ]
+            },
+            {
+              menuType: 'appariteur',
+              menuLabel: 'APPARITEUR',
+              menuItems: [
+                {
+                  name: "Documents",
+                  icon: <PageIcon />,
+                  subItems: [
+                    {
+                      name: "RELEVES",
+                      path: "/documents/releves",
+                    },
+                    {
+                      name: "FICHE DE VALIDATION",
+                      path: "/documents/fiche-validation",
+                    },
+                  ]
+                },
+                {
+                  name: "Enrollements",
+                  icon: <UserCircleIcon />,
+                  path: "/enrollements"
+                }
+              ]
+            },
+            {
+              menuType: 'administratif',
+              menuLabel: 'ADMINISTRATIF',
+              menuItems: [
+                {
+                  name: "Communiqués",
+                  icon: <CalenderIcon />,
+                  path: "/communiques"
+                },
+                {
+                  name: "Planning",
+                  icon: <CalenderIcon />,
+                  path: "/planning"
+                },
+                {
+                  name: "Messagerie",
+                  icon: <CalenderIcon />,
+                  path: "/messagerie"
+                }
+              ]
+            }
+          ]);
+          break;
+        // case 'APPARITEUR':
+        //   data.push({
+        //     menuType: 'app',
+        //     menuLabel: 'SERVICE ACADEMIQUE',
+        //     menuItems: [
+        //       {
+        //         name: "Etudiants",
+        //         icon: <UserCircleIcon />,
+        //         path: "/students",
+        //       },
+        //       {
+        //         name: 'Inscriptions',
+        //         icon: <ListIcon />,
+        //         subItems: [
+        //           {
+        //             name: "PREPARATOIRE",
+        //             path: "/inscriptions/Preparatoire",
+        //           },
+        //           {
+        //             name: "LICENCE",
+        //             path: "/inscriptions/Licence",
+        //           },
+        //           {
+        //             name: "MASTER",
+        //             path: "/inscriptions/Master",
+        //           }
+        //         ]
+        //       },
+        //       {
+        //         name: "Documents",
+        //         icon: <PageIcon />,
+        //         subItems: [
+        //           {
+        //             name: "RELEVES",
+        //             path: "/documents/releves",
+        //           },
+        //           {
+        //             name: "FREQUENTATION",
+        //             path: "/documents/frequentation",
+        //           },
+        //         ]
+        //       }
+        //     ]
+        //   })
+        //   break;
         // case 'JURY':
         //   data.push({
         //     menuType: 'jury',
