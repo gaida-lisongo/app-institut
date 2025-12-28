@@ -8,6 +8,7 @@ import Label from "../form/Label";
 import Select from "../form/Select";
 import Input from "../form/input/InputField";
 import LoadingSpinner from "../ui/jury/LoadingSpinner";
+import RechercheDetail from "./RechercheDetail";
 
 export interface Recherche {
     _id: string;
@@ -53,6 +54,8 @@ const RecherchesManager = ({categorie, promotion, onBack, annees} : {categorie: 
     const [loading, setLoading] = useState(true);
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [editingStage, setEditingStage] = useState<Recherche | null>(null);
+    const [selectedStage, setSelectedStage] = useState<Recherche | null>(null);
+    const [showDetail, setShowDetail] = useState(false);
     const [formData, setFormData] = useState<RechercheData>({
     promotionId: promotion._id,
     anneeId: '',
@@ -74,6 +77,18 @@ const RecherchesManager = ({categorie, promotion, onBack, annees} : {categorie: 
             status: 'Pending'
         });
         setEditingStage(null);
+    };
+
+    const handleViewDetail = (stage: Recherche) => {
+        setSelectedStage(stage);
+        setShowDetail(true);
+    };
+
+    const handleBackFromDetail = () => {
+        setSelectedStage(null);
+        setShowDetail(false);
+        // Recharger les données pour avoir les dernières informations
+        fetchStages();
     };
 
     const fetchStages = async () => {
@@ -159,6 +174,16 @@ const RecherchesManager = ({categorie, promotion, onBack, annees} : {categorie: 
     useEffect(() => {
         fetchStages();
     }, [promotion._id]);
+    // Afficher le détail si une recherche est sélectionnée
+    if (showDetail && selectedStage) {
+        console.log("Showing detail for stage:", selectedStage);
+        return (
+            <RechercheDetail 
+                stageData={selectedStage} 
+                onBack={handleBackFromDetail}
+            />
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -329,6 +354,12 @@ const RecherchesManager = ({categorie, promotion, onBack, annees} : {categorie: 
                             </div>
                             </div>
                             <div className="flex space-x-2">
+                            <button
+                                onClick={() => handleViewDetail(stage)}
+                                className="text-green-600 hover:text-green-800 px-3 py-1 rounded border border-green-600 hover:bg-green-50"
+                            >
+                                Voir détail
+                            </button>
                             <button
                                 onClick={() => handleEdit(stage)}
                                 className="text-blue-600 hover:text-blue-800 px-3 py-1 rounded border border-blue-600 hover:bg-blue-50"

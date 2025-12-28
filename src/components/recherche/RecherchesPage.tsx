@@ -57,7 +57,7 @@ const RecherchesPage = ({categorie= 'Stage'} : {categorie: 'Stage' | 'Sujet'}) =
             promotions={selectedFiliere.promotions}
             onClick={(promotion) => {
                 console.log("Selected promotion for stages:", promotion);
-                promotion ?? setSelectedPromotion(promotion);
+                setSelectedPromotion(promotion);
             }}
             title={`Gérer les ${categorie}s`}
         />
