@@ -3,6 +3,7 @@
 import { baseUrl } from '@/app/(admin)/page';
 import React, { useState } from 'react';
 import { Recherche } from './RecherchesManager';
+import { generateRechercheSubscriptionSheet } from '@/utils/RechercheSheetGenerator';
 
 // Icons alternatifs pour remplacer lucide-react temporairement
 const CheckCircle = ({ className }: { className?: string }) => (
@@ -72,6 +73,10 @@ const generateRechercheTemplate = () => {
   return 'matricule,tuteur,title,description\nETU001,Dr. Martin,Recherche en IA,Développement d\'algorithmes d\'apprentissage automatique';
 };
 
+const generateSubscriptionPDF = (recherche: Recherche) => {
+  generateRechercheSubscriptionSheet(recherche);
+};
+
 interface RechercheDetailProps {
   stageData: Recherche;
   onBack: () => void;
@@ -137,6 +142,11 @@ const RechercheDetail: React.FC<RechercheDetailProps> = ({ stageData, onBack }) 
       }
     };
     reader.readAsText(file);
+  };
+
+  // Fonction pour générer le PDF avec QR code
+  const generateSubscriptionPDF = (recherche: Recherche) => {
+    generateRechercheSubscriptionSheet(recherche);
   };
 
   const downloadTemplate = () => {
@@ -370,7 +380,7 @@ const RechercheDetail: React.FC<RechercheDetailProps> = ({ stageData, onBack }) 
           </div>
 
           {/* Template Download */}
-          <div className="mt-4">
+          <div className="mt-4 flex gap-3">
             <button
               onClick={downloadTemplate}
               className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
@@ -379,6 +389,16 @@ const RechercheDetail: React.FC<RechercheDetailProps> = ({ stageData, onBack }) 
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               Télécharger le modèle CSV
+            </button>
+            
+            <button
+              onClick={() => generateSubscriptionPDF(stageData)}
+              className="inline-flex items-center px-4 py-2 border border-blue-300 rounded-md shadow-sm text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+              Générer fiche PDF avec QR Code
             </button>
           </div>
 
