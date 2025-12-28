@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { generateEnrollmentSheet } from '@/utils/EnrollmentSheetGenerator';
 import { Enrollement } from '../page';
 import { Matiere } from '@/types/cours';
+import { parseCSV, validateEnrollmentData, generateEnrollmentTemplate, CSVParseResult } from '@/utils/csvUtils';
+import { baseUrl } from '@/app/(admin)/page';
 
 // Icônes SVG intégrées
 const ArrowLeft = ({ className }: { className?: string }) => (
@@ -72,108 +74,118 @@ export default function EnrollmentDetailsPage({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [importError, setImportError] = useState('');
+  const [csvPreviewData, setCsvPreviewData] = useState<{ matricule: string }[]>([]);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [showPreview, setShowPreview] = useState(false);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && file.type === 'text/csv') {
-      setSelectedFile(file);
-      setImportError('');
-    } else {
+    if (!file) return;
+    
+    if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
       setImportError('Veuillez sélectionner un fichier CSV valide');
+      return;
+    }
+    
+    setSelectedFile(file);
+    setImportError('');
+    setValidationErrors([]);
+    setCsvPreviewData([]);
+    setShowPreview(false);
+    
+    try {
+      const content = await file.text();
+      const parsed = parseCSV(content);
+      
+      if (!parsed.success) {
+        setImportError(parsed.error || 'Erreur lors de la lecture du fichier');
+        return;
+      }
+      
+      const validation = validateEnrollmentData(parsed);
+      
+      if (!validation.valid) {
+        setValidationErrors(validation.errors);
+        setImportError('Erreurs de validation détectées');
+      } else {
+        setCsvPreviewData(validation.data);
+        setShowPreview(true);
+        setImportError('');
+      }
+      
+    } catch (error) {
+      setImportError('Erreur lors de la lecture du fichier CSV');
     }
   };
 
-  const parseCSV = (csvText: string): string[] => {
-    const lines = csvText.split('\n').map(line => line.trim()).filter(line => line);
-    const matricules: string[] = [];
-    
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      
-      // Si c'est la première ligne et qu'elle contient "matricule", on la ignore (header)
-      if (i === 0 && line.toLowerCase().includes('matricule')) {
-        continue;
-      }
-      
-      // Traiter la ligne comme un matricule ou extraire le matricule
-      const columns = line.split(',').map(col => col.trim().replace(/"/g, ''));
-      
-      if (columns.length === 1) {
-        // Une seule colonne, c'est probablement le matricule
-        matricules.push(columns[0]);
-      } else {
-        // Plusieurs colonnes, prendre la première ou chercher celle qui ressemble à un matricule
-        const matriculeCandidate = columns[0];
-        if (matriculeCandidate) {
-          matricules.push(matriculeCandidate);
-        }
-      }
-    }
-    
-    return matricules.filter(m => m && m.length > 0);
+  const handleDownloadTemplate = () => {
+    const template = generateEnrollmentTemplate();
+    const blob = new Blob([template], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'template-import-inscriptions.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleImport = async () => {
-    if (!selectedFile) return;
+    if (csvPreviewData.length === 0) {
+      setImportError('Aucune donnée validée à importer');
+      return;
+    }
     
     setImporting(true);
     setImportError('');
     
     try {
-      const csvText = await selectedFile.text();
-      const matricules = parseCSV(csvText);
-      
-      if (matricules.length === 0) {
-        setImportError('Aucun matricule trouvé dans le fichier');
-        return;
-      }
-
-      // Importer chaque étudiant
       let successCount = 0;
       let errorCount = 0;
       
-      for (const matricule of matricules) {
+      for (const studentData of csvPreviewData) {
         try {
-          const response = await fetch(`/api/finance/enrollements/subscriber/${enrollement._id}`, {
+          const response = await fetch(`${baseUrl}/finance/enrollements/subscriber/${enrollement._id}`, {
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ matricule }),
+            body: JSON.stringify({ matricule: studentData.matricule }),
           });
           
           if (response.ok) {
             successCount++;
           } else {
             errorCount++;
-            console.error(`Erreur pour le matricule ${matricule}:`, await response.text());
+            console.error(`Erreur pour le matricule ${studentData.matricule}:`, await response.text());
           }
         } catch (err) {
           errorCount++;
-          console.error(`Erreur lors de l'import de ${matricule}:`, err);
+          console.error(`Erreur lors de l'import de ${studentData.matricule}:`, err);
         }
       }
 
       if (successCount > 0) {
-        // Les données seront mises à jour par le composant parent
         setImportError(`${successCount} étudiants importés avec succès`);
+        // Réinitialiser le formulaire
+        setSelectedFile(null);
+        setCsvPreviewData([]);
+        setShowPreview(false);
+        const fileInput = document.getElementById('csv-file') as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
       }
       
       if (errorCount === 0) {
         setImportError('');
       } else if (successCount === 0) {
-        setImportError(`Échec de l'import pour tous les ${matricules.length} étudiants`);
+        setImportError(`Échec de l'import pour tous les ${csvPreviewData.length} étudiants`);
       } else {
         setImportError(`${successCount} étudiants importés avec succès, ${errorCount} échecs`);
       }
       
-      setSelectedFile(null);
-      // Reset file input
-      const fileInput = document.getElementById('csv-file') as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
-      
     } catch (err) {
-      setImportError('Erreur lors de la lecture du fichier CSV');
+      setImportError('Erreur lors de l\'importation');
     } finally {
       setImporting(false);
     }
@@ -312,7 +324,24 @@ export default function EnrollmentDetailsPage({
             Importer des étudiants
           </h2>
         </div>
-        <div className="p-6">
+        <div className="p-6 space-y-4">
+          {/* Template Download */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-medium text-blue-900">Template CSV</h3>
+                <p className="text-xs text-blue-700">Téléchargez le modèle pour structurer vos données</p>
+              </div>
+              <button
+                onClick={handleDownloadTemplate}
+                className="px-3 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
+              >
+                📥 Télécharger
+              </button>
+            </div>
+          </div>
+
+          {/* File Upload */}
           <div className="max-w-md">
             <div className="flex items-center gap-4">
               <div className="flex-1">
@@ -331,21 +360,61 @@ export default function EnrollmentDetailsPage({
               </div>
               <button
                 onClick={handleImport}
-                disabled={!selectedFile || importing}
+                disabled={!showPreview || importing || csvPreviewData.length === 0}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {importing ? 'Import...' : 'Importer'}
               </button>
             </div>
             
+            {/* Validation Errors */}
+            {validationErrors.length > 0 && (
+              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <h4 className="text-sm font-medium text-red-800 mb-2">Erreurs de validation :</h4>
+                <ul className="text-sm text-red-700 list-disc list-inside space-y-1">
+                  {validationErrors.map((error, index) => (
+                    <li key={index}>{error}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {importError && (
               <p className="mt-2 text-sm text-red-600">{importError}</p>
             )}
             
             <p className="mt-2 text-xs text-gray-500">
-              Format CSV: Une colonne avec les matricules des étudiants
+              Format CSV requis: Une seule colonne "matricule" avec les matricules des étudiants
             </p>
           </div>
+
+          {/* Preview Section */}
+          {showPreview && csvPreviewData.length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-3">
+                Aperçu des données ({csvPreviewData.length} étudiants)
+              </h3>
+              <div className="bg-gray-50 border rounded-lg p-4 max-h-60 overflow-y-auto">
+                <table className="min-w-full text-sm">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-2 px-3 font-medium text-gray-700">Matricule</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {csvPreviewData.map((student, index) => (
+                      <tr key={index} className="border-b">
+                        <td className="py-2 px-3 font-mono text-blue-600">{student.matricule}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-xs text-gray-600 mt-2">
+                Vérifiez les données ci-dessus avant l'importation
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -374,7 +443,7 @@ export default function EnrollmentDetailsPage({
                   Date d'inscription
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Email
+                  Sexe
                 </th>
               </tr>
             </thead>
@@ -396,7 +465,7 @@ export default function EnrollmentDetailsPage({
                     {new Date(subscriber.date_inscription).toLocaleDateString('fr-FR')}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {subscriber.student?.email || '-'}
+                    {subscriber.student?.sexe || '-'}
                   </td>
                 </tr>
               )) || []}

@@ -32,7 +32,7 @@ export const generateEnrollmentSheet = (enrollement: Enrollement) => {
             width: 'auto'
           }
         ],
-        margin: [0, 0, 0, 30]
+        margin: [0, 0, 0, 10]
       },
       
       // Titre
@@ -40,7 +40,7 @@ export const generateEnrollmentSheet = (enrollement: Enrollement) => {
         text: 'FICHE D\'ENRÔLEMENT',
         style: 'title',
         alignment: 'center',
-        margin: [0, 0, 0, 30]
+        margin: [0, 0, 0, 10]
       },
       
       // Informations générales
@@ -87,7 +87,7 @@ export const generateEnrollmentSheet = (enrollement: Enrollement) => {
           ]
         },
         layout: 'lightHorizontalLines',
-        margin: [0, 0, 0, 20]
+        margin: [0, 0, 0, 10]
       },
       
       // Matières sélectionnées
@@ -124,52 +124,6 @@ export const generateEnrollmentSheet = (enrollement: Enrollement) => {
           fillColor: (rowIndex: number) => rowIndex === 0 ? '#f5f5f5' : null
         },
         margin: [0, 0, 0, 20]
-      },
-      
-      // Statistiques
-      {
-        text: 'STATISTIQUES',
-        style: 'sectionHeader',
-        margin: [0, 20, 0, 10]
-      },
-      
-      {
-        columns: [
-          {
-            width: '33%',
-            table: {
-              widths: ['100%'],
-              body: [
-                [{ text: 'Total Matières', style: 'statLabel', alignment: 'center' }],
-                [{ text: (enrollement.matieres?.length || 0).toString(), style: 'statValue', alignment: 'center' }]
-              ]
-            },
-            layout: 'noBorders'
-          },
-          {
-            width: '33%',
-            table: {
-              widths: ['100%'],
-              body: [
-                [{ text: 'Total Crédits', style: 'statLabel', alignment: 'center' }],
-                [{ text: (enrollement.matieres?.reduce((sum, matiere) => sum + (matiere.credits || 0), 0) || 0).toString(), style: 'statValue', alignment: 'center' }]
-              ]
-            },
-            layout: 'noBorders'
-          },
-          {
-            width: '34%',
-            table: {
-              widths: ['100%'],
-              body: [
-                [{ text: 'Étudiants Inscrits', style: 'statLabel', alignment: 'center' }],
-                [{ text: (enrollement.subscribers?.length || 0).toString(), style: 'statValue', alignment: 'center' }]
-              ]
-            },
-            layout: 'noBorders'
-          }
-        ],
-        margin: [0, 0, 0, 30]
       },
       
       // QR Code pour l'inscription
@@ -280,9 +234,6 @@ export const generateEnrollmentSheet = (enrollement: Enrollement) => {
       }
     },
     
-    defaultStyle: {
-      font: 'Helvetica'
-    }
   };
 
   // Générer et télécharger le PDF

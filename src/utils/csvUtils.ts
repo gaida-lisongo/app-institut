@@ -89,12 +89,73 @@ export function findColumnIndex(headers: string[], columnName: string): number {
 }
 
 /**
- * Trouve une ligne par valeur dans une colonne spécifique
+ * Génère un template CSV pour l'import d'inscriptions
  */
-export function findRowByValue(rows: string[][], columnIndex: number, value: string): string[] | null {
-    return rows.find(row => 
-        row[columnIndex]?.toLowerCase().includes(value.toLowerCase())
-    ) || null;
+export function generateEnrollmentTemplate(): string {
+    const headers = ['matricule'];
+    const exampleRows = [
+        ['HE.1.25.1101'],
+        ['HE.1.25.1102'],
+        ['HE.1.25.1103'],
+        ['HE.1.25.1104'],
+        ['HE.1.25.1105'],
+        ['HE.1.25.1106'],
+        ['HE.1.25.1107'],
+        ['HE.1.25.1108'],
+        ['HE.1.25.1109'],
+        ['HE.1.25.1110'],
+        ['HE.1.25.1111'],
+        ['HE.1.25.1112'],
+        ['HE.1.25.1113'],
+        ['HE.1.25.1114'],
+        ['HE.1.25.1115'],
+        ['HE.1.25.1116'],
+        ['HE.1.25.1117']
+    ];
+    
+    return generateCSV({
+        headers,
+        rows: exampleRows
+    });
+}
+
+/**
+ * Valide les données d'enrôlement depuis un CSV
+ */
+export function validateEnrollmentData(csvData: CSVParseResult): {
+    valid: boolean;
+    errors: string[];
+    data: { matricule: string }[];
+} {
+    const errors: string[] = [];
+    const data: { matricule: string }[] = [];
+    
+    if (!csvData.success || csvData.rows.length === 0) {
+        errors.push('Aucune donnée trouvée dans le fichier CSV');
+        return { valid: false, errors, data };
+    }
+    
+    const matriculeIndex = findColumnIndex(csvData.headers, 'matricule');
+    if (matriculeIndex === -1) {
+        errors.push('Colonne "matricule" manquante - elle est obligatoire');
+        return { valid: false, errors, data };
+    }
+    
+    csvData.rows.forEach((row, index) => {
+        const matricule = row[matriculeIndex]?.trim();
+        if (!matricule) {
+            errors.push(`Ligne ${index + 2}: Matricule manquant`);
+            return;
+        }
+        
+        data.push({ matricule });
+    });
+    
+    return {
+        valid: errors.length === 0,
+        errors,
+        data
+    };
 }
 
 /**
