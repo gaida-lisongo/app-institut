@@ -86,6 +86,27 @@ const RechercheDetail: React.FC<RechercheDetailProps> = ({ stageData, onBack }) 
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [newNote, setNewNote] = useState<number>(0);
   const [updatingNote, setUpdatingNote] = useState(false);
+  const [searchTerm, setSearchTerm] = useState<string>('');
+
+  // Filtrer les souscriptions basées sur le terme de recherche
+  const filteredSubscribers = stageData.subscribers?.filter(subscriber => {
+    if (!searchTerm) return true;
+    
+    const search = searchTerm.toLowerCase();
+    const studentName = subscriber.student ? 
+      `${subscriber.student.nom} ${subscriber.student.post_nom} ${subscriber.student.prenom}`.toLowerCase() : '';
+    const studentMatricule = subscriber.student?.matricule?.toLowerCase() || '';
+    const tuteurName = subscriber.tuteur ? 
+      `${subscriber.tuteur.nom} ${subscriber.tuteur.post_nom} ${subscriber.tuteur.prenom}`.toLowerCase() : '';
+    const tuteurMatricule = subscriber.tuteur?.matricule?.toLowerCase() || '';
+    const title = subscriber.title?.toLowerCase() || '';
+    
+    return studentName.includes(search) || 
+           studentMatricule.includes(search) || 
+           tuteurName.includes(search) || 
+           tuteurMatricule.includes(search) ||
+           title.includes(search);
+  }) || [];
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -474,202 +495,185 @@ const RechercheDetail: React.FC<RechercheDetailProps> = ({ stageData, onBack }) 
 
       {/* Subscribers Cards */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-6">
-          Souscriptions ({stageData.subscribers?.length || 0})
-        </h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-semibold text-gray-900">
+            Souscriptions ({filteredSubscribers.length} / {stageData.subscribers?.length || 0})
+          </h2>
+          
+          {/* Barre de recherche */}
+          <div className="relative max-w-md">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              placeholder="Rechercher étudiant, tuteur, titre..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+        </div>
         
-        {stageData.subscribers && stageData.subscribers.length > 0 ? (
-          <div className="grid gap-6">
-            {stageData.subscribers.map((subscriber, index) => (
-              <div key={subscriber._id || index} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-                {/* Header avec étudiant et tuteur */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  {/* Étudiant */}
-                  <div className="bg-blue-50 rounded-lg p-4">
-                    <h3 className="text-lg font-semibold text-blue-900 mb-3 flex items-center">
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                      Étudiant
-                    </h3>
-                    {subscriber.student ? (
-                      <div className="space-y-2">
-                        <p className="font-medium text-gray-900">
-                          {subscriber.student.nom} {subscriber.student.post_nom} {subscriber.student.prenom}
+        {filteredSubscribers.length > 0 ? (
+          <div className="space-y-4">
+            {filteredSubscribers.map((subscriber, index) => (
+              <div key={subscriber._id || index} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                  {/* Étudiant - 3 cols */}
+                  <div className="lg:col-span-3">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900 text-sm">
+                          {subscriber.student ? 
+                            `${subscriber.student.nom} ${subscriber.student.prenom}` : 
+                            'N/A'
+                          }
                         </p>
-                        <p className="text-sm text-gray-600">
-                          <span className="font-medium">Matricule:</span> {subscriber.student.matricule}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          <span className="font-medium">Sexe:</span> {subscriber.student.sexe}
+                        <p className="text-xs text-gray-500">
+                          {subscriber.student?.matricule || 'N/A'}
                         </p>
                       </div>
-                    ) : (
-                      <p className="text-gray-500">Informations étudiant non disponibles</p>
-                    )}
+                    </div>
                   </div>
 
-                  {/* Tuteur */}
-                  <div className="bg-green-50 rounded-lg p-4">
-                    <h3 className="text-lg font-semibold text-green-900 mb-3 flex items-center">
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                      </svg>
-                      Tuteur
-                    </h3>
-                    {subscriber.tuteur ? (
-                      <div className="space-y-2">
-                        <p className="font-medium text-gray-900">
-                          {subscriber.tuteur.nom} {subscriber.tuteur.post_nom} {subscriber.tuteur.prenom}
+                  {/* Tuteur - 3 cols */}
+                  <div className="lg:col-span-3">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900 text-sm">
+                          {subscriber.tuteur ? 
+                            `${subscriber.tuteur.nom} ${subscriber.tuteur.prenom}` : 
+                            'Non assigné'
+                          }
                         </p>
-                        <p className="text-sm text-gray-600">
-                          <span className="font-medium">Matricule:</span> {subscriber.tuteur.matricule}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          <span className="font-medium">Email:</span> {subscriber.tuteur.email}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          <span className="font-medium">Téléphone:</span> {subscriber.tuteur.telephone}
+                        <p className="text-xs text-gray-500">
+                          {subscriber.tuteur?.email || 'N/A'}
                         </p>
                       </div>
-                    ) : (
-                      <p className="text-gray-500">Tuteur non assigné</p>
-                    )}
+                    </div>
                   </div>
-                </div>
 
-                {/* Recherche */}
-                <div className="bg-purple-50 rounded-lg p-4 mb-6">
-                  <h3 className="text-lg font-semibold text-purple-900 mb-3 flex items-center">
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    Recherche
-                  </h3>
-                  <div className="space-y-3">
+                  {/* Titre recherche - 3 cols */}
+                  <div className="lg:col-span-3">
                     <div>
-                      <p className="font-medium text-gray-900 mb-1">Titre:</p>
-                      <p className="text-gray-700">{subscriber.title || 'Titre non défini'}</p>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900 mb-1">Description:</p>
-                      <p className="text-gray-700">{subscriber.description || 'Description non disponible'}</p>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900 mb-1">Date d'inscription:</p>
-                      <p className="text-sm text-gray-600">
+                      <p className="font-medium text-gray-900 text-sm truncate" title={subscriber.title || 'Titre non défini'}>
+                        {subscriber.title || 'Titre non défini'}
+                      </p>
+                      <p className="text-xs text-gray-500">
                         {subscriber.date_inscription ? 
-                          new Date(subscriber.date_inscription).toLocaleDateString('fr-FR', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          }) : 
-                          'Date non disponible'
+                          new Date(subscriber.date_inscription).toLocaleDateString('fr-FR') : 
+                          'Date N/A'
                         }
                       </p>
                     </div>
                   </div>
-                </div>
 
-                {/* Report et Note */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Report */}
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      Rapport
-                    </h4>
-                    {subscriber.report && subscriber.report.trim() !== '' ? (
-                      <a 
-                        href={subscriber.report} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center px-3 py-2 border border-blue-300 rounded-md text-sm text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors"
-                      >
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                        Voir le rapport
-                      </a>
-                    ) : (
-                      <p className="text-gray-500 text-sm">Aucun rapport soumis</p>
-                    )}
-                  </div>
+                  {/* Actions - 3 cols */}
+                  <div className="lg:col-span-3">
+                    <div className="flex items-center justify-between space-x-3">
+                      {/* Rapport */}
+                      <div className="flex-1">
+                        {subscriber.report && subscriber.report.trim() !== '' ? (
+                          <a 
+                            href={subscriber.report} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center px-2 py-1 text-xs text-blue-700 bg-blue-100 rounded hover:bg-blue-200 transition-colors"
+                          >
+                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                            Rapport
+                          </a>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-1 text-xs text-gray-500 bg-gray-100 rounded">
+                            Pas de rapport
+                          </span>
+                        )}
+                      </div>
 
-                  {/* Note */}
-                  <div className="bg-yellow-50 rounded-lg p-4">
-                    <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                      </svg>
-                      Note
-                    </h4>
-                    
-                    {editingNoteId === subscriber._id ? (
-                      <div className="space-y-3">
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="number"
-                            min="0"
-                            max="20"
-                            step="0.5"
-                            value={newNote}
-                            onChange={(e) => setNewNote(parseFloat(e.target.value) || 0)}
-                            className="w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Note"
-                          />
-                          <span className="text-sm text-gray-500">/ 20</span>
-                        </div>
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => subscriber.student && handleNoteUpdate(subscriber.student._id, subscriber._id)}
-                            disabled={updatingNote || !subscriber.student}
-                            className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:opacity-50"
-                          >
-                            {updatingNote ? 'Sauvegarde...' : 'Sauvegarder'}
-                          </button>
-                          <button
-                            onClick={() => setEditingNoteId(null)}
-                            className="px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600"
-                          >
-                            Annuler
-                          </button>
-                        </div>
+                      {/* Note */}
+                      <div className="flex items-center space-x-2">
+                        {editingNoteId === subscriber._id ? (
+                          <div className="flex items-center space-x-1">
+                            <input
+                              type="number"
+                              min="0"
+                              max="20"
+                              step="0.5"
+                              value={newNote}
+                              onChange={(e) => setNewNote(parseFloat(e.target.value) || 0)}
+                              className="w-16 px-1 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              placeholder="Note"
+                            />
+                            <button
+                              onClick={() => subscriber.student && handleNoteUpdate(subscriber.student._id, subscriber._id)}
+                              disabled={updatingNote || !subscriber.student}
+                              className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 disabled:opacity-50"
+                            >
+                              ✓
+                            </button>
+                            <button
+                              onClick={() => setEditingNoteId(null)}
+                              className="px-2 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center space-x-1">
+                            <span className={`text-sm font-medium ${
+                              (subscriber.note || 0) >= 10 ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              {subscriber.note?.toFixed(1) || '0.0'}/20
+                            </span>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              (subscriber.note || 0) >= 10 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {(subscriber.note || 0) >= 10 ? '✓' : '✗'}
+                            </span>
+                            <button
+                              onClick={() => {
+                                setEditingNoteId(subscriber._id);
+                                setNewNote(subscriber.note || 0);
+                              }}
+                              className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                            >
+                              Modifier
+                            </button>
+                          </div>
+                        )}
                       </div>
-                    ) : (
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <span className={`text-lg font-bold ${
-                            (subscriber.note || 0) >= 10 ? 'text-green-600' : 'text-red-600'
-                          }`}>
-                            {subscriber.note?.toFixed(1) || '0.0'}
-                          </span>
-                          <span className="text-gray-500">/ 20</span>
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${
-                            (subscriber.note || 0) >= 10 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                            {(subscriber.note || 0) >= 10 ? 'Réussi' : 'Échec'}
-                          </span>
-                        </div>
-                        <button
-                          onClick={() => {
-                            setEditingNoteId(subscriber._id);
-                            setNewNote(subscriber.note || 0);
-                          }}
-                          className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-                        >
-                          Modifier
-                        </button>
-                      </div>
-                    )}
+                    </div>
                   </div>
                 </div>
               </div>
             ))}
+          </div>
+        ) : stageData.subscribers && stageData.subscribers.length > 0 ? (
+          <div className="text-center py-8">
+            <svg className="w-12 h-12 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <p className="text-gray-500 text-lg">Aucun résultat trouvé</p>
+            <p className="text-gray-400 text-sm mt-2">
+              Essayez de modifier votre recherche
+            </p>
           </div>
         ) : (
           <div className="text-center py-12">
