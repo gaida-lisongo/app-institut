@@ -30,7 +30,6 @@ export interface Retrait {
 
 export const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
 
-console.log('Base URL:', baseUrl);
 export default function Ecommerce() {
   const { agent } = useUserStore();
   const [years, setYears] = useState<Annee[] | null>(null);
@@ -83,16 +82,41 @@ export default function Ecommerce() {
       if (agent?._id) {
         const recettes = [];
         
-        const [annees, retraits, recettesInsc, recettesDoc ] = await Promise.all([fetchAnnees(), readDepenses('ACADEMIQUE'), readRecettes('Inscription'), readRecettes('Document')]);
+        const [
+          annees, 
+          retraits, 
+          recettesEnrol, 
+          recettesDoc, 
+          recettesActivity,
+          recettesRessource,
+          recettesStage,
+          recettesSujet
+        ] = await Promise.all([fetchAnnees(), readDepenses('SECTION'), readRecettes('Enrollement'), readRecettes('Document'), readRecettes('Activity'), readRecettes('Ressource'), readRecettes('Stage'), readRecettes('Sujet')]);
         setYears(annees || []);
         setDepenses(retraits || []);
 
-        if (recettesInsc) {
-          recettes.push(...recettesInsc);
+        if (recettesEnrol) {
+          recettes.push(...recettesEnrol);
         }
 
         if (recettesDoc) {
           recettes.push(...recettesDoc);
+        }
+
+        if (recettesActivity) {
+          recettes.push(...recettesActivity);
+        }
+
+        if (recettesRessource) {
+          recettes.push(...recettesRessource);
+        }
+
+        if (recettesStage) {
+          recettes.push(...recettesStage);
+        }
+
+        if (recettesSujet) {
+          recettes.push(...recettesSujet);
         }
 
         setTransactions(recettes || []);
@@ -128,8 +152,12 @@ export default function Ecommerce() {
 
       <div className="col-span-12 xl:col-span-5">
         <MonthlyTarget productsType={[
-          'Inscription',
+          'Enrollement',
           'Document',
+          'Activity',
+          'Ressource',
+          'Stage',
+          'Sujet'
         ]} recettes={transactions || []} />
       </div>
 

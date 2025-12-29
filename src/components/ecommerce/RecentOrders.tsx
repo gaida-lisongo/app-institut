@@ -231,7 +231,7 @@ export default function RecentOrders({
                 agentId: agent._id,
                 anneeId: annee._id,
                 amount: createdExpense.amount,
-                service: 'ACADEMIQUE',
+                service: 'SECTION',
               });
             }
           } catch (error) {
