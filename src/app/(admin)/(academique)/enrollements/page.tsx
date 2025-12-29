@@ -151,6 +151,11 @@ const EnrolementsPage = () => {
                 const newEnrolement: Enrollement = {
                     _id: response.data._id,
                     ...data,
+                    matieres: data.matieres.map(matiereId => ({ _id: matiereId } as Matiere)),
+                    planing: {
+                        ...data.planing,
+                        matieres: data.planing.matieres.map(matiereId => ({ _id: matiereId } as Matiere))
+                    },
                     promotionId: selectedPromotion!,
                     anneeId: selectedAnnee!,
                     createdAt: new Date(),
