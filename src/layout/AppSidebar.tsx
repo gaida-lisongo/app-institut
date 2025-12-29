@@ -351,46 +351,46 @@ const AppSidebar: React.FC = () => {
 
     autorisations.forEach(auth => {
       switch (auth?.designation) {
-        case 'ADMINISTRATEUR':
-          data.push({
-            menuType: 'admin',
-            menuLabel: 'ADMINISTRATEUR',
-            menuItems: [
-              {
-                name: 'Mentions',
-                icon: <TableIcon />,
-                subItems: [
-                  {
-                    name: "Bureau",
-                    path: "/mentions/bureau",
-                  },
-                  {
-                    name: "Filière",
-                    path: "/mentions/filiere",
-                  }
-                ]
-              },
-              {
-                name: "Agents",
-                icon: <UserCircleIcon />,
-                subItems: [
-                  {
-                    name: "Enseignants",
-                    path: "/agents/enseignants",
-                  },
-                  {
-                    name: "Administratif",
-                    path: "/agents/administratifs",
-                  },
-                  {
-                    name: "Autorisation",
-                    path: "/agents/autorisations",
-                  },
-                ],
-              },
-            ]
-          })
-          break;
+        // case 'ADMINISTRATEUR':
+        //   data.push({
+        //     menuType: 'admin',
+        //     menuLabel: 'ADMINISTRATEUR',
+        //     menuItems: [
+        //       {
+        //         name: 'Mentions',
+        //         icon: <TableIcon />,
+        //         subItems: [
+        //           {
+        //             name: "Bureau",
+        //             path: "/mentions/bureau",
+        //           },
+        //           {
+        //             name: "Filière",
+        //             path: "/mentions/filiere",
+        //           }
+        //         ]
+        //       },
+        //       {
+        //         name: "Agents",
+        //         icon: <UserCircleIcon />,
+        //         subItems: [
+        //           {
+        //             name: "Enseignants",
+        //             path: "/agents/enseignants",
+        //           },
+        //           {
+        //             name: "Administratif",
+        //             path: "/agents/administratifs",
+        //           },
+        //           {
+        //             name: "Autorisation",
+        //             path: "/agents/autorisations",
+        //           },
+        //         ],
+        //       },
+        //     ]
+        //   })
+        //   break;
         case 'ACADEMIQUE':
           data.push(...[
             {
@@ -610,7 +610,7 @@ const AppSidebar: React.FC = () => {
     },
   ];
 
-  console.log("Current charge Horaire :", groupedCharges);
+  // console.log("Current charge Horaire :", groupedCharges);
   return (
     <aside
       className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
