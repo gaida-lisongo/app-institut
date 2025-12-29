@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { baseUrl } from '@/app/(admin)/page';
 
 // Icônes SVG
 const ArrowLeftIcon = ({ className }: { className?: string }) => (
@@ -43,6 +44,7 @@ interface Agent {
 }
 
 interface BureauMember {
+  _id?: string;
   agent: Agent;
   role: string;
 }
@@ -94,7 +96,7 @@ export default function BureauDetailPage() {
   // Fetch section details
   const fetchSection = async () => {
     try {
-      const response = await fetch(`/api/sections/${bureauId}?populate=filieres,bureau.agent`);
+      const response = await fetch(`${baseUrl}/services/sections?sectionId=${bureauId}&populate=filieres,bureau.agent`);
       const result = await response.json();
       
       if (result.success) {
@@ -255,26 +257,26 @@ export default function BureauDetailPage() {
   };
 
   // Remove member from bureau
-  const handleRemoveBureauMember = async (agentId: string) => {
+  const handleRemoveBureauMember = async (membre: BureauMember) => {
+    console.log('Membre à supprimer:', membre);
     if (!confirm('Êtes-vous sûr de vouloir retirer ce membre du bureau ?')) {
       return;
     }
 
     try {
       // Récupérer les membres actuels et filtrer celui à supprimer
-      const currentBureau = section?.bureau?.filter(member => member.agent._id !== agentId).map(member => ({
-        agent: member.agent._id,
-        role: member.role
-      })) || [];
+      // const currentBureau = section?.bureau?.filter(member => member.agent?._id !== agentId).map(member => ({
+      //   agent: member.agent?._id,
+      //   role: member.role
+      // })) || [];
 
-      const response = await fetch(`/api/sections/${bureauId}`, {
-        method: 'PUT',
+      const response = await fetch(`${baseUrl}/services/sections/remove/${bureauId}`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...section,
-          bureau: currentBureau
+          bureauId: membre._id
         }),
       });
 
@@ -294,7 +296,7 @@ export default function BureauDetailPage() {
   const getAvailableAgents = () => {
     if (!section || !allAgents) return [];
     
-    const assignedAgentIds = section.bureau?.map(m => m.agent._id) || [];
+    const assignedAgentIds = section.bureau?.filter(m => m.agent?._id).map(m => m.agent._id) || [];
     let availableAgents = allAgents.filter(agent => !assignedAgentIds.includes(agent._id));
     
     // Apply search filter
@@ -340,6 +342,8 @@ export default function BureauDetailPage() {
       </div>
     );
   }
+
+  console.log('Section data:', section);
 
   return (
     <div className="space-y-6">
@@ -411,16 +415,16 @@ export default function BureauDetailPage() {
                   <div className="flex-shrink-0">
                     <div className="h-10 w-10 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
                       <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                        {membre.agent.nom.charAt(0)}{membre.agent.post_nom.charAt(0)}
+                        {membre.agent?.nom?.charAt(0) || '?'}{membre.agent?.post_nom?.charAt(0) || '?'}
                       </span>
                     </div>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      {membre.agent.nom} {membre.agent.post_nom} {membre.agent.prenom}
+                      {membre.agent ? `${membre.agent.nom || ''} ${membre.agent.post_nom || ''} ${membre.agent.prenom || ''}` : 'Agent non défini'}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Matricule: {membre.agent.matricule}
+                      Matricule: {membre.agent?.matricule || 'Non défini'}
                     </p>
                   </div>
                 </div>
@@ -430,7 +434,7 @@ export default function BureauDetailPage() {
                     {membre.role}
                   </span>
                   <button
-                    onClick={() => handleRemoveBureauMember(membre.agent._id)}
+                    onClick={() => handleRemoveBureauMember(membre)}
                     className="p-1 text-red-600 hover:text-red-800 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-md transition-colors"
                     title="Retirer du bureau"
                   >

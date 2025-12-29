@@ -351,137 +351,145 @@ const AppSidebar: React.FC = () => {
 
     autorisations.forEach(auth => {
       switch (auth?.designation) {
-        // case 'ADMINISTRATEUR':
-        //   data.push({
-        //     menuType: 'admin',
-        //     menuLabel: 'ADMINISTRATEUR',
-        //     menuItems: [
-        //       {
-        //         name: 'Mentions',
-        //         icon: <TableIcon />,
-        //         subItems: [
-        //           {
-        //             name: "Bureau",
-        //             path: "/mentions/bureau",
-        //           },
-        //           {
-        //             name: "Filière",
-        //             path: "/mentions/filiere",
-        //           }
-        //         ]
-        //       },
-        //       {
-        //         name: "Agents",
-        //         icon: <UserCircleIcon />,
-        //         subItems: [
-        //           {
-        //             name: "Enseignants",
-        //             path: "/agents/enseignants",
-        //           },
-        //           {
-        //             name: "Administratif",
-        //             path: "/agents/administratifs",
-        //           },
-        //           {
-        //             name: "Autorisation",
-        //             path: "/agents/autorisations",
-        //           },
-        //         ],
-        //       },
-        //     ]
-        //   })
-        //   break;
-        case 'ACADEMIQUE':
+        case 'ADMINISTRATEUR':
           data.push(...[
             {
-              menuType: 'enseignement',
-              menuLabel: 'ENSEIGNEMENT',
+              menuType: 'sgacad',
+              menuLabel: 'SGACAD',
               menuItems: [
                 {
-                  name: 'Cours',
-                  icon: <ListIcon />,
+                  name: 'Mentions',
+                  icon: <TableIcon />,
                   subItems: [
                     {
-                      name: "Unites",
-                      path: "/cours/unites",
+                      name: "Bureau",
+                      path: "/mentions/bureau",
                     },
                     {
-                      name: "Charges Horaires",
-                      path: "/cours/titulaire",
+                      name: "Filière",
+                      path: "/mentions/filiere",
                     }
                   ]
                 },
-                {
-                  name: "Classes",
-                  icon: <PageIcon />,
-                  path: "/promotions"
-                }
               ]
             },
             {
-              menuType: 'recherche',
-              menuLabel: 'RECHERCHE',
+              menuType: 'sgadmin',
+              menuLabel: 'SGADMIN',
               menuItems: [
                 {
-                  name: "Stages",
-                  icon: <CalenderIcon />,
-                  path: "/stages"
-                },
-                {
-                  name: "Sujets",
-                  icon: <BoxCubeIcon />,
-                  path: "/sujets"
-                }
-              ]
-            },
-            {
-              menuType: 'appariteur',
-              menuLabel: 'APPARITEUR',
-              menuItems: [
-                {
-                  name: "Documents",
-                  icon: <PageIcon />,
+                  name: "Agents",
+                  icon: <UserCircleIcon />,
                   subItems: [
                     {
-                      name: "RELEVES",
-                      path: "/documents/releves",
+                      name: "Enseignants",
+                      path: "/agents/enseignants",
                     },
                     {
-                      name: "FICHE DE VALIDATION",
-                      path: "/documents/fiche-validation",
+                      name: "Administratif",
+                      path: "/agents/administratifs",
                     },
-                  ]
+                    {
+                      name: "Autorisation",
+                      path: "/agents/autorisations",
+                    },
+                  ],
                 },
-                {
-                  name: "Enrollements",
-                  icon: <UserCircleIcon />,
-                  path: "/enrollements"
-                }
-              ]
-            },
-            {
-              menuType: 'administratif',
-              menuLabel: 'ADMINISTRATIF',
-              menuItems: [
-                {
-                  name: "Communiqués",
-                  icon: <CalenderIcon />,
-                  path: "/communiques"
-                },
-                {
-                  name: "Planning",
-                  icon: <CalenderIcon />,
-                  path: "/planning"
-                },
-                {
-                  name: "Messagerie",
-                  icon: <CalenderIcon />,
-                  path: "/messagerie"
-                }
               ]
             }
           ]);
           break;
+        // case 'ACADEMIQUE':
+        //   data.push(...[
+        //     {
+        //       menuType: 'enseignement',
+        //       menuLabel: 'ENSEIGNEMENT',
+        //       menuItems: [
+        //         {
+        //           name: 'Cours',
+        //           icon: <ListIcon />,
+        //           subItems: [
+        //             {
+        //               name: "Unites",
+        //               path: "/cours/unites",
+        //             },
+        //             {
+        //               name: "Charges Horaires",
+        //               path: "/cours/titulaire",
+        //             }
+        //           ]
+        //         },
+        //         {
+        //           name: "Classes",
+        //           icon: <PageIcon />,
+        //           path: "/promotions"
+        //         }
+        //       ]
+        //     },
+        //     {
+        //       menuType: 'recherche',
+        //       menuLabel: 'RECHERCHE',
+        //       menuItems: [
+        //         {
+        //           name: "Stages",
+        //           icon: <CalenderIcon />,
+        //           path: "/stages"
+        //         },
+        //         {
+        //           name: "Sujets",
+        //           icon: <BoxCubeIcon />,
+        //           path: "/sujets"
+        //         }
+        //       ]
+        //     },
+        //     {
+        //       menuType: 'appariteur',
+        //       menuLabel: 'APPARITEUR',
+        //       menuItems: [
+        //         {
+        //           name: "Documents",
+        //           icon: <PageIcon />,
+        //           subItems: [
+        //             {
+        //               name: "RELEVES",
+        //               path: "/documents/releves",
+        //             },
+        //             {
+        //               name: "FICHE DE VALIDATION",
+        //               path: "/documents/fiche-validation",
+        //             },
+        //           ]
+        //         },
+        //         {
+        //           name: "Enrollements",
+        //           icon: <UserCircleIcon />,
+        //           path: "/enrollements"
+        //         }
+        //       ]
+        //     },
+        //     {
+        //       menuType: 'administratif',
+        //       menuLabel: 'ADMINISTRATIF',
+        //       menuItems: [
+        //         {
+        //           name: "Communiqués",
+        //           icon: <CalenderIcon />,
+        //           path: "/communiques"
+        //         },
+        //         {
+        //           name: "Planning",
+        //           icon: <CalenderIcon />,
+        //           path: "/planning"
+        //         },
+        //         {
+        //           name: "Messagerie",
+        //           icon: <CalenderIcon />,
+        //           path: "/messagerie"
+        //         }
+        //       ]
+        //     }
+        //   ]);
+        //   break;
         // case 'APPARITEUR':
         //   data.push({
         //     menuType: 'app',

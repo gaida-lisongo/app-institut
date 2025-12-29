@@ -1,4 +1,5 @@
 'use client'
+import { baseUrl } from "@/app/(admin)/page";
 import AgentCard from "@/components/agents/AgentCard";
 import CSVImportModal from "@/components/csv/CSVImportModal";
 import { AgentData, CreateAgentData } from "@/models/Agent";
@@ -100,7 +101,7 @@ export const AgentManager = ({ gradeCode }: { gradeCode: string }) => {
 
     const createAgent = async (agent: CreateAgentData) => {
         try {
-            const response = await fetch(`/api/agents`, {
+            const response = await fetch(`${baseUrl}/agents`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
