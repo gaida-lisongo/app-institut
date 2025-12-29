@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { PlusIcon } from '@/icons';
 import { PencilIcon, TrashIcon } from '@/components/icons/Icons';
+import { baseUrl } from '@/app/(admin)/page';
 
 // Types
 interface Promotion {
@@ -21,7 +22,7 @@ interface Semestre {
   _id: string;
   designation: string;
   credits: number;
-  unites: string[];
+  unites: any[];
   createdAt: string;
   updatedAt: string;
 }
@@ -74,7 +75,7 @@ export default function PromotionSemestresPage() {
     visible: false
   });
   const [allUnites, setAllUnites] = useState<Unite[]>([]);
-  const [selectedUnites, setSelectedUnites] = useState<string[]>([]);
+  const [selectedUnites, setSelectedUnites] = useState<any[]>([]);
   const [originalUnites, setOriginalUnites] = useState<string[]>([]);
 
   // États pour les formulaires
@@ -258,8 +259,8 @@ export default function PromotionSemestresPage() {
   const handleManageUnites = (semestre: Semestre) => {
     setShowUnites({ visible: true, data: semestre });
     console.log("State visibility : ", showUnites);
-    setSelectedUnites([...semestre.unites]);
-    setOriginalUnites([...semestre.unites]);
+    setSelectedUnites([...(semestre.unites.map(u => u._id))]);
+    setOriginalUnites([...(semestre.unites.map(u => u._id))]);
     fetchAllUnites();
   };
 
@@ -271,8 +272,29 @@ export default function PromotionSemestresPage() {
   };
 
   // Désassocier une unité du semestre
-  const handleDisassociateUnite = (uniteId: string) => {
-    setSelectedUnites(prev => prev.filter(id => id !== uniteId));
+  const handleDisassociateUnite = async (uniteId: string) => {
+    try {
+      const req = await fetch(`${baseUrl}/semestre/${showUnites.data?._id}/disassociate-unite`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ uniteId }),
+      });
+
+      const res = await req.json();
+
+      if (!res.success) {
+        setError(res.error || 'Erreur lors de la désassociation de l\'unité');
+        return;
+      }
+      
+      setSelectedUnites(prev => prev.filter(id => id !== uniteId));
+
+    } catch (error) {
+      console.error('Erreur:', error);
+      setError('Erreur de connexion au serveur');
+    }
   };
 
   // Annuler les modifications
@@ -290,7 +312,17 @@ export default function PromotionSemestresPage() {
 
   // Sauvegarder les modifications
   const handleSaveUnites = async () => {
+    console.log("Saving Unites...", selectedUnites);
+    console.log("Original Unites...", showUnites);
+    console.log("All Unites...", allUnites);
+    const totalCredits = selectedUnites.reduce((acc, id) => {
+      const unite = allUnites.find(u => u._id === id);
+      return unite ? acc + unite.credits : acc;
+    }, 0);
+    const unitesSelected = allUnites.filter(u => selectedUnites.includes(u._id));
+
     if (!showUnites.data) return;
+    if (totalCredits == 0) return;
 
     try {
       setLoading(true);
@@ -301,6 +333,7 @@ export default function PromotionSemestresPage() {
         },
         body: JSON.stringify({
           ...showUnites.data,
+          credits: totalCredits,
           unites: selectedUnites
         }),
       });
@@ -310,7 +343,7 @@ export default function PromotionSemestresPage() {
       if (result.success) {
         // Mettre à jour la liste locale des semestres
         setSemestres(prev => 
-          prev.map(s => s._id === showUnites.data!._id ? result.data : s)
+          prev.map(s => s._id === showUnites.data!._id ? {...result.data, unites: unitesSelected} : s)
         );
         
         setShowUnites({ visible: false });
@@ -402,9 +435,16 @@ export default function PromotionSemestresPage() {
   const renderUnites = () => {
     if (!showUnites.data) return null;
 
-    const availableUnites = allUnites.filter(unite => !selectedUnites.includes(unite._id));
-    const associatedUnites = allUnites.filter(unite => selectedUnites.includes(unite._id));
+    console.log("Selected Unites: ", selectedUnites);
 
+    const availableUnites = allUnites.filter(unite => {
+      const isExisting = selectedUnites.find(u => u === unite._id);
+      return !isExisting;
+    });
+    const associatedUnites = allUnites.filter(unite => {
+      return selectedUnites.find(u => u === unite._id);
+    });
+    
     return (
       <div className="space-y-6">
         {/* En-tête avec navigation */}
@@ -558,7 +598,7 @@ export default function PromotionSemestresPage() {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Unités Associées ({associatedUnites.length})
+                Unités Associées ({selectedUnites.length})
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 Cliquez sur "Désassocier" pour retirer une unité du semestre
